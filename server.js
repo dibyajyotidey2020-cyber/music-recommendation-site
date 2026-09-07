@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 3001;
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, "data.json");
 
@@ -191,11 +191,26 @@ async function handleApi(req, res, url) {
   if (req.method === "POST" && url.pathname === "/api/auth/login") {
     try {
       const body = await readBody(req);
-      const user = findUserByEmail(normalizeEmail(body.email));
-      if (!user || !passwordMatches(typeof body.password === "string" ? body.password : "", user.passwordHash)) return sendJson(res, 401, { error: "Email or password is incorrect" });
+      console.log('Login attempt:', { email: body.email, passwordPresent: typeof body.password === 'string' });
+      const normalizedEmail = normalizeEmail(body.email);
+      console.log('Normalized email:', normalizedEmail);
+      const user = findUserByEmail(normalizedEmail);
+      console.log('User found:', !!user);
+      if (!user) {
+        return sendJson(res, 401, { error: "Email or password is incorrect" });
+      }
+      const password = typeof body.password === "string" ? body.password : "";
+      const match = passwordMatches(password, user.passwordHash);
+      console.log('Password match:', match);
+      if (!match) {
+        return sendJson(res, 401, { error: "Email or password is incorrect" });
+      }
       const cookie = createSession(user.userId);
       return sendJson(res, 200, { user: safeUser(user) }, { "Set-Cookie": cookie });
-    } catch (error) { return sendJson(res, 400, { error: error.message }); }
+    } catch (error) {
+      console.error('Login error:', error);
+      return sendJson(res, 400, { error: error.message });
+    }
   }
 
   if (req.method === "POST" && url.pathname === "/api/auth/logout") {

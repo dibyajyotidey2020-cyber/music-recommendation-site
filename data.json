@@ -85,6 +85,23 @@
       "genres": [],
       "artists": [],
       "updatedAt": "2026-09-07T16:02:02.560Z"
+    },
+    "b93b8ff8-00bc-4312-9ef5-c8ddb6cf539a": {
+      "userId": "b93b8ff8-00bc-4312-9ef5-c8ddb6cf539a",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-07T16:33:25.226Z"
+    },
+    "35d527dc-5b9f-46df-93b5-a87432a85590": {
+      "userId": "35d527dc-5b9f-46df-93b5-a87432a85590",
+      "email": "test2@example.com",
+      "displayName": "true",
+      "passwordHash": "93ad7b767690b458f6d9f5ce00c2c47e:6f890e63d2d3f7f490dbdc918f784e7e9657bb04eccd79e212b09bde2c363fbc",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "createdAt": "2026-09-07T16:38:12.412Z"
     }
   },
   "libraries": {
@@ -113,7 +130,13 @@
       "1833969245",
       "1592777504"
     ],
-    "06b93b8c-dff4-49e0-8a37-058952364f9c": []
+    "06b93b8c-dff4-49e0-8a37-058952364f9c": [],
+    "b93b8ff8-00bc-4312-9ef5-c8ddb6cf539a": [
+      "1786481197",
+      "1440766128",
+      "1568740033"
+    ],
+    "35d527dc-5b9f-46df-93b5-a87432a85590": []
   },
   "sessions": {
     "dfb4bb9ea4f1ee6b2c7908ecd731756b25aef4a6efdfcc90d8e39af475904118": {
@@ -136,9 +159,9 @@
       "userId": "6b7f4103-5ddd-4403-8fdf-0f7ea349340b",
       "expiresAt": 1791373901775
     },
-    "4ae99f895a894f3d5c3fcdb45a5e80edc3d30d091f08d2a738020e481a2a9316": {
-      "userId": "06b93b8c-dff4-49e0-8a37-058952364f9c",
-      "expiresAt": 1791387583882
+    "13f7d27b5eb2689a6b7d54e4ccdd0b8866f6623092217a914d87d572eba03b9a": {
+      "userId": "35d527dc-5b9f-46df-93b5-a87432a85590",
+      "expiresAt": 1791391134646
     }
   },
   "catalog": {
@@ -175,6 +198,19 @@
       "length": "2:36",
       "storeUrl": "https://music.apple.com/us/album/upbeat-pop/1568091541?i=1568091873&uo=4",
       "genre": "Pop",
+      "source": "itunes"
+    },
+    "1568740033": {
+      "id": "1568740033",
+      "title": "Astronaut In The Ocean",
+      "artist": "Masked Wolf",
+      "album": "Astronaut In The Ocean - Single",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/96/1e/99/961e997d-de14-6e80-3e68-4c4a94c716ee/075679780263.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/ba/b0/68/bab0687b-0489-612e-3559-0f2defcd1557/mzaf_3173996287703185338.plus.aac.p.m4a",
+      "duration": 132800,
+      "length": "2:13",
+      "storeUrl": "https://music.apple.com/us/album/astronaut-in-the-ocean/1568740032?i=1568740033&uo=4",
+      "genre": "Hip-Hop/Rap",
       "source": "itunes"
     },
     "1590036021": {
