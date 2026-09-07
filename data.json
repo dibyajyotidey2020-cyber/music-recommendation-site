@@ -1,0 +1,125 @@
+{
+  "users": {
+    "ef345e1f-f2e7-4dbd-ba2e-ec4871626227": {
+      "userId": "ef345e1f-f2e7-4dbd-ba2e-ec4871626227",
+      "mood": "Feel good",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-06T19:51:21.013Z"
+    },
+    "ff68ad0e-2dc3-4692-bb24-13068f3fd1e6": {
+      "userId": "ff68ad0e-2dc3-4692-bb24-13068f3fd1e6",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-06T20:44:43.198Z"
+    },
+    "21002720-cee9-4a7e-b769-1068f0d53733": {
+      "userId": "21002720-cee9-4a7e-b769-1068f0d53733",
+      "mood": "Focus",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-06T20:56:07.783Z"
+    },
+    "865ec3f1-66cb-4cde-8d36-77ac1e4e0588": {
+      "userId": "865ec3f1-66cb-4cde-8d36-77ac1e4e0588",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-06T20:47:19.489Z"
+    },
+    "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b": {
+      "userId": "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-07T07:19:53.201Z"
+    }
+  },
+  "libraries": {
+    "ef345e1f-f2e7-4dbd-ba2e-ec4871626227": [
+      "1786481197",
+      "1544491998"
+    ],
+    "ff68ad0e-2dc3-4692-bb24-13068f3fd1e6": [
+      "1786481197"
+    ],
+    "test-real-ba5bc9fa5e694b069fa18c8c0c1f79ed": [
+      "1544491998"
+    ],
+    "21002720-cee9-4a7e-b769-1068f0d53733": [
+      "1590036021"
+    ],
+    "865ec3f1-66cb-4cde-8d36-77ac1e4e0588": [],
+    "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b": []
+  },
+  "sessions": {
+    "dfb4bb9ea4f1ee6b2c7908ecd731756b25aef4a6efdfcc90d8e39af475904118": {
+      "userId": "865ec3f1-66cb-4cde-8d36-77ac1e4e0588",
+      "expiresAt": 1791319532972
+    },
+    "0b36def9f2df3487be0bc4332a0f4b25c672187569be77b8a1e828df5ea4a7fd": {
+      "userId": "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b",
+      "expiresAt": 1791320328055
+    }
+  },
+  "catalog": {
+    "1440766128": {
+      "id": "1440766128",
+      "title": "Thinkin Bout You",
+      "artist": "Frank Ocean",
+      "album": "channel ORANGE",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/04/f8/63/04f863fc-2852-604f-c910-a97ac069506b/12UMGIM40339.rgb.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview126/v4/8a/2c/35/8a2c35f6-ac70-560c-0a1c-516e105c6af8/mzaf_13522699475931524613.plus.aac.p.m4a",
+      "storeUrl": "https://music.apple.com/us/album/thinkin-bout-you/1440765580?i=1440766128&uo=4",
+      "genre": "Pop",
+      "source": "itunes"
+    },
+    "1544491998": {
+      "id": "1544491998",
+      "title": "Someone Like You",
+      "artist": "Adele",
+      "album": "21",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/eb/ca/25/ebca2596-cd1e-b295-91a3-771c868d0a79/191404113868.png/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/08/22/2e/08222e25-43f5-20e6-a442-b8127ac83368/mzaf_1689070223363740216.plus.aac.p.m4a",
+      "storeUrl": "https://music.apple.com/us/album/someone-like-you/1544491232?i=1544491998&uo=4",
+      "genre": "Pop",
+      "source": "itunes"
+    },
+    "1590036021": {
+      "id": "1590036021",
+      "title": "Easy On Me",
+      "artist": "Adele",
+      "album": "30",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/73/6d/7c/736d7cfb-c79d-c9a9-4170-5e71d008dea1/886449666430.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/4c/08/30/4c08305e-0556-30a1-d1ba-2f916b56d62c/mzaf_10419822985277809788.plus.aac.p.m4a",
+      "duration": 224695,
+      "length": "3:45",
+      "storeUrl": "https://music.apple.com/us/album/easy-on-me/1590035691?i=1590036021&uo=4",
+      "genre": "Pop",
+      "source": "itunes"
+    },
+    "1786481197": {
+      "id": "1786481197",
+      "title": "back to friends",
+      "artist": "sombr",
+      "album": "back to friends - Single",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5d/d5/ad/5dd5ad1b-fabf-9218-77f0-3adbfd5328ac/054391237118.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/d7/63/7d/d7637dec-cf2d-1455-3398-f1a6340359d0/mzaf_88927986796632454.plus.aac.p.m4a",
+      "storeUrl": "https://music.apple.com/us/album/back-to-friends/1786481196?i=1786481197&uo=4",
+      "genre": "Indie Rock",
+      "source": "itunes"
+    },
+    "1890165329": {
+      "id": "1890165329",
+      "title": "Chill Indie",
+      "artist": "Alira Beats",
+      "album": "Chill Indie - Single",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/aa/06/37/aa0637f2-4eda-900e-6d4f-34645360a22f/1033352.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/dc/c4/4e/dcc44e5a-021e-ffac-9133-a8e8f0dc6c01/mzaf_4975429977737920261.plus.aac.p.m4a",
+      "storeUrl": "https://music.apple.com/us/album/chill-indie/1890165327?i=1890165329&uo=4",
+      "genre": "Alternative",
+      "source": "itunes"
+    }
+  }
+}

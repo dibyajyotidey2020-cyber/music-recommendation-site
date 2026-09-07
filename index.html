@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="TVA (Taste Variance Algorithm) is a mobile-first music discovery experience based on your mood and taste."
+    />
+    <title>TVA — Taste Variance Algorithm</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="splash-screen" id="splashScreen" role="status" aria-live="polite" aria-label="Opening TVA">
+      <div class="splash-grain" aria-hidden="true"></div>
+      <div class="splash-light light-one" aria-hidden="true"></div>
+      <div class="splash-light light-two" aria-hidden="true"></div>
+      <div class="splash-light light-three" aria-hidden="true"></div>
+      <div class="splash-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="splash-scenes" aria-hidden="true">
+        <span class="splash-scene scene-one"></span>
+        <span class="splash-scene scene-two"></span>
+        <span class="splash-scene scene-three"></span>
+        <span class="splash-scene scene-four"></span>
+      </div>
+      <div class="splash-mosaic" aria-hidden="true">
+        <span class="mosaic-card mosaic-a"><b>CHILL</b><i></i></span>
+        <span class="mosaic-card mosaic-b"><b>FOCUS</b><i></i></span>
+        <span class="mosaic-card mosaic-c"><b>ENERGY</b><i></i></span>
+        <span class="mosaic-card mosaic-d"><b>FEEL GOOD</b><i></i></span>
+        <span class="mosaic-card mosaic-e"><b>TVA</b><i></i></span>
+        <span class="mosaic-card mosaic-f"><b>YOUR MIX</b><i></i></span>
+      </div>
+      <div class="splash-ride" aria-hidden="true">
+        <div class="ride-wall ride-wall-left">
+          <span class="ride-poster poster-one"><b>CHILL</b><i></i></span>
+          <span class="ride-poster poster-two"><b>FOCUS</b><i></i></span>
+          <span class="ride-poster poster-three"><b>ENERGY</b><i></i></span>
+        </div>
+        <div class="ride-wall ride-wall-right">
+          <span class="ride-poster poster-four"><b>FEEL<br />GOOD</b><i></i></span>
+          <span class="ride-poster poster-five"><b>TVA<br />SESSIONS</b><i></i></span>
+          <span class="ride-poster poster-six"><b>DISCOVER<br />MORE</b><i></i></span>
+        </div>
+        <div class="ride-floor"></div>
+        <div class="ride-portal"><span>TVA</span></div>
+      </div>
+      <div class="splash-scanline" aria-hidden="true"></div>
+      <div class="splash-content">
+        <div class="splash-caption caption-one">TVA SOUND SYSTEM</div>
+        <div class="splash-caption caption-two">TUNE INTO THE FEELING</div>
+        <div class="splash-caption caption-three">A NEW WAY TO LISTEN</div>
+        <div class="splash-logo-lockup">
+          <span class="brand-mark splash-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <p class="splash-wordmark">TVA</p>
+          <span class="splash-rule" aria-hidden="true"></span>
+          <p class="splash-kicker">TASTE VARIANCE ALGORITHM</p>
+        </div>
+      </div>
+      <audio id="introAudio" autoplay preload="auto" aria-hidden="true">
+        <source src="assets/tva-intro.mpeg" type="audio/mpeg" />
+      </audio>
+    </div>
+    <main class="app-shell">
+      <section class="app" aria-label="TVA music recommendations">
+        <header class="topbar">
+          <a class="brand" href="#home" aria-label="TVA home">
+            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="brand-lockup"><span class="brand-name">TVA</span><small>TASTE VARIANCE ALGORITHM</small></span>
+          </a>
+          <div class="topbar-actions">
+            <button class="theme-button" id="themeButton" type="button" aria-label="Change appearance" title="Change appearance">◐</button>
+            <button class="profile-button" type="button" aria-label="Open profile">
+              <span>A</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="intro" id="home">
+          <p class="eyebrow" id="greeting">GOOD DAY, LISTENER</p>
+          <h1>What does today<br />sound like?</h1>
+          <div class="mood-row" aria-label="Choose a listening mood">
+            <button class="mood-chip" type="button" data-mood="Chill">✦ Chill</button>
+            <button class="mood-chip" type="button" data-mood="Focus">◌ Focus</button>
+            <button class="mood-chip" type="button" data-mood="Energy">↗ Energy</button>
+            <button class="mood-chip" type="button" data-mood="Feel good">☼ Feel good</button>
+          </div>
+          <p class="mood-help" id="moodHelp">Choose a mood and TVA will tune the songs in your home feed.</p>
+        </section>
+
+        <section class="for-you" aria-labelledby="for-you-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">MADE FOR YOU</p>
+              <h2 id="for-you-title">Your next favourite</h2>
+              <p class="match-note">Match score = mood + taste fit</p>
+            </div>
+            <span class="match" id="matchText">98% match</span>
+          </div>
+
+          <article class="track-card" id="trackCard">
+            <div class="album-art art-velvet" id="albumArt" aria-hidden="true">
+              <span class="orb orb-one"></span><span class="orb orb-two"></span><span class="spark spark-one"></span><span class="spark spark-two"></span>
+            <span class="art-label" id="artLabel">CHOOSE<br />A MOOD</span>
+            </div>
+            <div class="track-info">
+              <div>
+                <p class="track-kicker" id="trackTag">YOUR MIX STARTS HERE</p>
+                <h3 id="trackTitle">Choose a mood</h3>
+                <p id="trackArtist">Start by choosing Chill, Focus, Energy, or Feel good</p>
+              </div>
+              <button class="more-button" type="button" aria-label="More options for this song">•••</button>
+            </div>
+            <div class="progress-wrap" aria-label="Preview progress">
+              <input class="progress-range" id="progressControl" type="range" min="0" max="1" step="0.1" value="0" aria-label="Song progress" disabled />
+              <div class="time-row"><span id="currentTime">0:00</span><span id="trackLength">—</span></div>
+            </div>
+            <div class="play-row">
+              <button class="round-button small" id="backButton" type="button" aria-label="Previous track">↺</button>
+              <button class="play-button" id="playButton" type="button" aria-label="Play selected song">
+                <span class="play-icon" aria-hidden="true"></span>
+              </button>
+              <button class="round-button small" id="nextButton" type="button" aria-label="Next track">↻</button>
+            </div>
+          </article>
+          <audio id="mainAudio" preload="none" hidden></audio>
+
+          <div class="reaction-row">
+            <button class="reaction-button pass" id="passButton" type="button"><span aria-hidden="true">×</span> Not for me</button>
+            <button class="reaction-button save" id="saveButton" type="button"><span aria-hidden="true">♡</span> Save for later</button>
+          </div>
+          <p class="helper-text" id="helperText" aria-live="polite">Choose a mood to start your recommendations.</p>
+        </section>
+
+        <section class="taste-section" aria-labelledby="taste-title">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">BECAUSE YOU LIKE</p>
+              <h2 id="taste-title">Dreamy production</h2>
+            </div>
+            <button class="text-button" id="tasteSeeAll" type="button">See all</button>
+          </div>
+          <div class="mini-track-row">
+            <button class="mini-track selected" type="button" aria-label="Choose a song" hidden>
+              <span class="mini-art mini-art-one" aria-hidden="true"></span>
+              <span><b></b><small></small></span>
+            </button>
+            <button class="mini-track" type="button" aria-label="Choose a song" hidden>
+              <span class="mini-art mini-art-two" aria-hidden="true"></span>
+              <span><b></b><small></small></span>
+            </button>
+            <button class="mini-track" type="button" aria-label="Choose a song" hidden>
+              <span class="mini-art mini-art-three" aria-hidden="true"></span>
+              <span><b></b><small></small></span>
+            </button>
+          </div>
+        </section>
+
+        <nav class="bottom-nav" aria-label="Primary navigation">
+          <a class="nav-item active" href="#home"><span aria-hidden="true">⌂</span>Home</a>
+          <button class="nav-item" id="discoverNav" type="button"><span aria-hidden="true">⌕</span>Discover</button>
+          <button class="nav-item library-nav" id="libraryNav" type="button"><span aria-hidden="true">♬</span>Library</button>
+          <button class="nav-item" id="profileNav" type="button"><span aria-hidden="true">☻</span>Profile</button>
+        </nav>
+
+        <dialog class="auth-dialog" id="authDialog" aria-labelledby="authTitle">
+          <div class="auth-panel">
+            <button class="auth-close" id="closeAuth" type="button" aria-label="Close account panel">×</button>
+            <p class="eyebrow">TVA ACCOUNT</p>
+            <h2 id="authTitle">Welcome back</h2>
+            <p class="auth-subtitle" id="authSubtitle">Log in to keep your recommendations and library in sync.</p>
+            <div class="auth-tabs" role="tablist" aria-label="Account access">
+              <button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true">Log in</button>
+              <button class="auth-tab" id="signupTab" type="button" role="tab" aria-selected="false">Sign up</button>
+            </div>
+            <form id="authForm">
+              <label class="auth-field" id="nameField" hidden>Display name<input id="nameInput" name="displayName" autocomplete="name" placeholder="What should we call you?" /></label>
+              <label class="auth-field">Email<input id="emailInput" name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+              <label class="auth-field">Password<input id="passwordInput" name="password" type="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters" required /></label>
+              <button class="auth-submit" id="authSubmit" type="submit">Log in</button>
+              <p class="auth-status" id="authStatus" aria-live="polite"></p>
+            </form>
+            <div class="signed-in" id="signedIn" hidden>
+              <p>You’re signed in. Your saved music and taste profile are ready on this device.</p>
+              <button class="auth-submit logout-button" id="logoutButton" type="button">Log out</button>
+            </div>
+          </div>
+        </dialog>
+
+        <dialog class="auth-dialog browse-dialog" id="discoverDialog" aria-labelledby="discoverTitle">
+          <div class="auth-panel">
+            <button class="auth-close" id="closeDiscover" type="button" aria-label="Close discover panel">×</button>
+            <p class="eyebrow">DISCOVER</p>
+            <h2 id="discoverTitle">Find your next mood</h2>
+            <p class="auth-subtitle">Pick a feeling and TVA will bring the best match to your home feed.</p>
+            <form class="music-search" id="musicSearchForm">
+              <label class="sr-only" for="musicSearchInput">Search songs or artists</label>
+              <input id="musicSearchInput" type="search" placeholder="Search a song or artist" autocomplete="off" required />
+              <button type="submit">Search</button>
+            </form>
+            <div class="music-results" id="musicResults" aria-live="polite"><p class="library-empty">Search for a real song or artist to get started.</p></div>
+            <audio id="previewAudio" controls preload="none" hidden></audio>
+            <div class="discover-grid">
+              <button type="button" class="discover-choice choice-chill" data-discover-mood="Chill"><span>✦</span><b>Chill</b><small>Slow it down</small></button>
+              <button type="button" class="discover-choice choice-focus" data-discover-mood="Focus"><span>◌</span><b>Focus</b><small>Deep work</small></button>
+              <button type="button" class="discover-choice choice-energy" data-discover-mood="Energy"><span>↗</span><b>Energy</b><small>Turn it up</small></button>
+              <button type="button" class="discover-choice choice-feel" data-discover-mood="Feel good"><span>☼</span><b>Feel good</b><small>Brighten up</small></button>
+            </div>
+          </div>
+        </dialog>
+
+        <dialog class="auth-dialog browse-dialog" id="libraryDialog" aria-labelledby="libraryTitle">
+          <div class="auth-panel">
+            <button class="auth-close" id="closeLibrary" type="button" aria-label="Close library panel">×</button>
+            <p class="eyebrow">YOUR LIBRARY</p>
+            <h2 id="libraryTitle">Saved for later</h2>
+            <p class="auth-subtitle">Songs you save will stay here for your next listening session.</p>
+            <div class="library-list" id="libraryList" aria-live="polite"><p class="library-empty">Loading your library…</p></div>
+          </div>
+        </dialog>
+
+        <dialog class="auth-dialog browse-dialog" id="productionDialog" aria-labelledby="productionTitle">
+          <div class="auth-panel">
+            <button class="auth-close" id="closeProduction" type="button" aria-label="Close productions panel">×</button>
+            <p class="eyebrow">PRODUCTIONS</p>
+            <h2 id="productionTitle">Artists in your mix</h2>
+            <p class="auth-subtitle">Choose an artist and song to make it your home player.</p>
+            <div class="production-list" id="productionList" aria-live="polite"><p class="library-empty">Loading productions…</p></div>
+          </div>
+        </dialog>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

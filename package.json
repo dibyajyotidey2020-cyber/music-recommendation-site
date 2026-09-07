@@ -1,0 +1,9 @@
+{
+  "name": "aura-music-recommendation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A mobile-first music recommendation website with a small JSON API.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
