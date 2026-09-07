@@ -289,6 +289,9 @@ h3 { margin-bottom: 3px; font-size: 1.36rem; line-height: 1; letter-spacing: -.0
 .music-result-actions { display: flex; align-items: center; gap: 5px; }
 .music-result-actions button, .music-result-actions a { display: inline-grid; min-width: 31px; min-height: 31px; place-items: center; padding: 0 7px; border: 0; border-radius: 9px; background: #e9e4ff; color: #604dcc; font-size: .64rem; font-weight: 800; text-decoration: none; }
 .music-result-actions a { background: transparent; color: #7c748b; }
+.save-result[data-saved="true"] { background: #ddd5ff; color: #5f4dcc; }
+.save-flash { animation: save-pulse .4s ease; }
+@keyframes save-pulse { 50% { transform: scale(1.25); } }
 .music-attribution { margin: -2px 0 10px; color: var(--muted); font-size: .58rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .discover-choice { display: grid; grid-template-columns: 28px 1fr; grid-template-rows: 1fr 1fr; column-gap: 8px; min-height: 77px; padding: 13px; border: 0; border-radius: 16px; background: #f1edff; color: var(--ink); text-align: left; }

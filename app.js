@@ -231,11 +231,13 @@ function renderMusicResults(results, attribution = "") {
     musicResults.innerHTML = '<p class="library-empty">No songs found. Try another artist or title.</p>';
     return;
   }
+  const savedIds = tracks.filter(t => t.isSaved).map(t => t.id);
   results.forEach((track) => {
     const result = document.createElement("div");
     result.className = "music-result";
+    const alreadySaved = savedIds.includes(track.id);
     const artwork = track.artwork ? `<img src="${track.artwork}" alt="" loading="lazy">` : '<span class="library-song-art art-velvet" aria-hidden="true"></span>';
-    result.innerHTML = `${artwork}<span><p class="music-result-title"></p><p class="music-result-artist"></p></span><span class="music-result-actions"><button type="button" class="preview-result" aria-label="Preview song">▶</button><button type="button" class="save-result" aria-label="Save song">♡</button>${track.storeUrl ? `<a href="${track.storeUrl}" target="_blank" rel="noopener" aria-label="Open song page">↗</a>` : ""}</span>`;
+    result.innerHTML = `${artwork}<span><p class="music-result-title"></p><p class="music-result-artist"></p></span><span class="music-result-actions"><button type="button" class="preview-result" aria-label="Preview song">▶</button><button type="button" class="save-result${alreadySaved ? '" data-saved="true' : ''}" aria-label="${alreadySaved ? 'Remove song' : 'Save song'}">${alreadySaved ? '♥' : '♡'}</button>${track.storeUrl ? `<a href="${track.storeUrl}" target="_blank" rel="noopener" aria-label="Open song page">↗</a>` : ""}</span>`;
     result.querySelector(".music-result-title").textContent = track.title || "Unknown song";
     result.querySelector(".music-result-artist").textContent = `${track.artist || "Unknown artist"}${track.album ? ` · ${track.album}` : ""}`;
     result.querySelector(".preview-result").addEventListener("click", async () => {
@@ -257,6 +259,8 @@ function renderMusicResults(results, attribution = "") {
       button.dataset.saved = String(!saved);
       button.textContent = saved ? "♡" : "♥";
       button.setAttribute("aria-label", saved ? "Save song" : "Remove song");
+      button.classList.add("save-flash");
+      setTimeout(() => button.classList.remove("save-flash"), 800);
       helperText.textContent = saved ? `${track.title} was removed from your library.` : `${track.title} was saved to your library.`;
     });
     musicResults.append(result);
@@ -347,8 +351,26 @@ function selectTrackForHome(track) {
   renderTrack();
 }
 
+function computeMatch(track) {
+  if (!selectedMood) return "— match";
+  const moodGenres = {
+    Chill: ["alternative", "indie", "r&b/soul", "singer/songwriter", "ambient", "jazz", "electronic"],
+    Focus: ["ambient", "electronic", "classical", "instrumental", "soundtrack", "new age"],
+    Energy: ["pop", "hip-hop/rap", "dance", "rock", "electronic", "latin"],
+    "Feel good": ["pop", "indie pop", "soul", "funk", "reggae", "r&b/soul"]
+  };
+  let score = 82;
+  const genre = (track.genre || "").toLowerCase();
+  const aligned = moodGenres[selectedMood] || [];
+  if (aligned.some(g => genre.includes(g))) score += 10;
+  else score += 3;
+  const hash = [...(track.id || "")].reduce((s, c) => s + c.charCodeAt(0), 0);
+  score += (hash % 7) - 2;
+  return `${Math.min(99, Math.max(75, score))}% match`;
+}
+
 function normalizeMusicTrack(track) {
-  return { ...track, tag: track.tag || (track.genre ? track.genre.toUpperCase() : "FROM DISCOVER"), style: track.style || "art-velvet", progress: "0%", match: track.match || "90% match" };
+  return { ...track, tag: track.tag || (track.genre ? track.genre.toUpperCase() : "FROM DISCOVER"), style: track.style || "art-velvet", progress: "0%", match: track.match || computeMatch(track) };
 }
 
 function renderTrack() {
@@ -356,7 +378,7 @@ function renderTrack() {
   trackTitle.textContent = track.title;
   trackArtist.textContent = track.artist;
   trackTag.textContent = track.tag || (track.genre ? track.genre.toUpperCase() : "SELECTED FROM DISCOVER");
-  matchText.textContent = track.isSaved ? (track.match || "90% match") : "0% match";
+  matchText.textContent = track.match || "—";
   trackLength.textContent = track.length || "—";
   if (track.art) artLabel.innerHTML = track.art;
   else artLabel.textContent = String(track.title || "SELECTED").toUpperCase().split(" ").slice(0, 3).join("\n");
@@ -399,7 +421,9 @@ function renderTasteTracks() {
     miniTracks.forEach((button) => { button.hidden = true; });
     return;
   }
-  if (sourceTracks[0]?.source === "itunes") tasteTitle.textContent = `${sourceTracks[0].artist} · ${sourceTracks[0].album || "Selected songs"}`;
+  const moodTitles = { Chill: "Mellow & relaxed", Focus: "Steady & clear", Energy: "Upbeat & moving", "Feel good": "Bright & uplifting" };
+  if (selectedMood) tasteTitle.textContent = moodTitles[selectedMood] || selectedMood;
+  else if (sourceTracks[0]?.source === "itunes") tasteTitle.textContent = `${sourceTracks[0].artist} · ${sourceTracks[0].album || "Selected songs"}`;
   else tasteTitle.textContent = "Dreamy production";
   miniTracks.forEach((button, index) => {
     button.hidden = false;
