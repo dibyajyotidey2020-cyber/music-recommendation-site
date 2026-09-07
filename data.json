@@ -44,6 +44,33 @@
       "genres": [],
       "artists": [],
       "createdAt": "2026-09-07T10:27:52.402Z"
+    },
+    "b05b7566-5bdf-4188-b954-cf7a389fec1e": {
+      "userId": "b05b7566-5bdf-4188-b954-cf7a389fec1e",
+      "email": "fulltest-1788780445157@test.com",
+      "displayName": "Test User",
+      "passwordHash": "d068481ddcba3c464b2cac7562605bda:411d1a8564fa18a70a4648314babaf2638c331d83de1ec26dde8ea48b6c32a9d",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "createdAt": "2026-09-07T11:27:25.234Z"
+    },
+    "6b7f4103-5ddd-4403-8fdf-0f7ea349340b": {
+      "userId": "6b7f4103-5ddd-4403-8fdf-0f7ea349340b",
+      "email": "fulltest-1788781901606@test.com",
+      "displayName": "Test User",
+      "passwordHash": "befef7af6eba9b82744cd5971dc17778:eaaaa31d5106de831ca8a8f1f3a00e1fc415d308f874f8da829e3f13e30a3d05",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "createdAt": "2026-09-07T11:51:41.679Z"
+    },
+    "419ffdff-ac74-436f-a6ec-fe4c7317095e": {
+      "userId": "419ffdff-ac74-436f-a6ec-fe4c7317095e",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-07T12:03:43.543Z"
     }
   },
   "libraries": {
@@ -64,7 +91,9 @@
     "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b": [],
     "b106eec9-5d98-4240-98ea-7d497e9579ad": [
       "1568091873"
-    ]
+    ],
+    "b05b7566-5bdf-4188-b954-cf7a389fec1e": [],
+    "6b7f4103-5ddd-4403-8fdf-0f7ea349340b": []
   },
   "sessions": {
     "dfb4bb9ea4f1ee6b2c7908ecd731756b25aef4a6efdfcc90d8e39af475904118": {
@@ -78,6 +107,14 @@
     "5766965d7a6cd89db3c1401c0b19c72f931b560eab621b6b69f7ccada429c983": {
       "userId": "b106eec9-5d98-4240-98ea-7d497e9579ad",
       "expiresAt": 1791368872402
+    },
+    "f08e3c35c62515f9cbe3dbf83710d9ae12062912bc09720738471278e6956c6c": {
+      "userId": "b05b7566-5bdf-4188-b954-cf7a389fec1e",
+      "expiresAt": 1791372445321
+    },
+    "066229bd3cbb918f0c17d5e54af8ad9547b87e45d95941c77f15ff42564833da": {
+      "userId": "6b7f4103-5ddd-4403-8fdf-0f7ea349340b",
+      "expiresAt": 1791373901775
     }
   },
   "catalog": {
@@ -127,6 +164,19 @@
       "length": "3:45",
       "storeUrl": "https://music.apple.com/us/album/easy-on-me/1590035691?i=1590036021&uo=4",
       "genre": "Pop",
+      "source": "itunes"
+    },
+    "1733731157": {
+      "id": "1733731157",
+      "title": "No One Noticed",
+      "artist": "The Marías",
+      "album": "Submarine",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/0b/4d/b6/0b4db6bd-2d40-55a5-1714-67f5c816294d/075679659644.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/46/59/68/465968ed-5c6d-0f97-167d-6f53b74793fc/mzaf_12576584058255046082.plus.aac.p.m4a",
+      "duration": 236907,
+      "length": "3:57",
+      "storeUrl": "https://music.apple.com/us/album/no-one-noticed/1733730985?i=1733731157&uo=4",
+      "genre": "Alternative",
       "source": "itunes"
     },
     "1786481197": {

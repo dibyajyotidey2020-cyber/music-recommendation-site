@@ -59,16 +59,11 @@ let introAudioEnd = 38;
 const INTRO_AUDIO_START = 179;
 const INTRO_AUDIO_END = 217;
 
-function prepareIntroAudio() {
+function prepareAndPlayIntroAudio() {
   if (!introAudio || !Number.isFinite(introAudio.duration) || introAudio.duration <= 0) return;
   const hasFullSource = introAudio.duration > INTRO_AUDIO_END + 1;
   introAudio.currentTime = hasFullSource ? INTRO_AUDIO_START : 0;
   introAudioEnd = hasFullSource ? INTRO_AUDIO_END : introAudio.duration;
-}
-
-function startIntroAudio() {
-  if (!introAudio) return;
-  prepareIntroAudio();
   introAudio.play().catch(() => {
     // Browsers may block sound until the first user gesture; the visual intro still plays.
   });
@@ -90,11 +85,13 @@ else window.addEventListener("load", revealSplash, { once: true });
 // The opener has no visible skip control; any tap/click on the full-screen scene
 // quietly takes the listener to TVA.
 splashScreen?.addEventListener("pointerup", closeSplash, { passive: true });
-introAudio?.addEventListener("loadedmetadata", prepareIntroAudio, { once: true });
+introAudio?.addEventListener("loadedmetadata", prepareAndPlayIntroAudio, { once: true });
 introAudio?.addEventListener("timeupdate", () => {
   if (introAudio.currentTime >= introAudioEnd - 0.08) closeSplash();
 });
-startIntroAudio();
+if (introAudio && introAudio.readyState >= 1) {
+  prepareAndPlayIntroAudio();
+}
 
 const deviceTheme = window.matchMedia("(prefers-color-scheme: dark)");
 let themeMode = "device";
