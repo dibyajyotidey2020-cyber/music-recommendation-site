@@ -10,56 +10,40 @@
     <title>TVA — Taste Variance Algorithm</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <div class="splash-screen" id="splashScreen" role="status" aria-live="polite" aria-label="Opening TVA">
-      <div class="splash-grain" aria-hidden="true"></div>
-      <div class="splash-light light-one" aria-hidden="true"></div>
-      <div class="splash-light light-two" aria-hidden="true"></div>
-      <div class="splash-light light-three" aria-hidden="true"></div>
-      <div class="splash-rings" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="splash-scenes" aria-hidden="true">
-        <span class="splash-scene scene-one"></span>
-        <span class="splash-scene scene-two"></span>
-        <span class="splash-scene scene-three"></span>
-        <span class="splash-scene scene-four"></span>
-      </div>
-      <div class="splash-mosaic" aria-hidden="true">
-        <span class="mosaic-card mosaic-a"><b>CHILL</b><i></i></span>
-        <span class="mosaic-card mosaic-b"><b>FOCUS</b><i></i></span>
-        <span class="mosaic-card mosaic-c"><b>ENERGY</b><i></i></span>
-        <span class="mosaic-card mosaic-d"><b>FEEL GOOD</b><i></i></span>
-        <span class="mosaic-card mosaic-e"><b>TVA</b><i></i></span>
-        <span class="mosaic-card mosaic-f"><b>YOUR MIX</b><i></i></span>
-      </div>
-      <div class="splash-ride" aria-hidden="true">
-        <div class="ride-wall ride-wall-left">
-          <span class="ride-poster poster-one"><b>CHILL</b><i></i></span>
-          <span class="ride-poster poster-two"><b>FOCUS</b><i></i></span>
-          <span class="ride-poster poster-three"><b>ENERGY</b><i></i></span>
-        </div>
-        <div class="ride-wall ride-wall-right">
-          <span class="ride-poster poster-four"><b>FEEL<br />GOOD</b><i></i></span>
-          <span class="ride-poster poster-five"><b>TVA<br />SESSIONS</b><i></i></span>
-          <span class="ride-poster poster-six"><b>DISCOVER<br />MORE</b><i></i></span>
-        </div>
-        <div class="ride-floor"></div>
-        <div class="ride-portal"><span>TVA</span></div>
-      </div>
-      <div class="splash-scanline" aria-hidden="true"></div>
-      <div class="splash-content">
-        <div class="splash-caption caption-one">TVA SOUND SYSTEM</div>
-        <div class="splash-caption caption-two">TUNE INTO THE FEELING</div>
-        <div class="splash-caption caption-three">A NEW WAY TO LISTEN</div>
-        <div class="splash-logo-lockup">
-          <span class="brand-mark splash-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+  <body class="welcome-active">
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-content">
+        <div class="splash-logo-lockup" style="opacity: 1; transform: scale(1); animation: none;">
+          <span class="brand-mark splash-mark" aria-hidden="true"><i style="animation: none; height: 24px;"></i><i style="animation: none; height: 53px;"></i><i style="animation: none; height: 37px;"></i></span>
           <p class="splash-wordmark">TVA</p>
-          <span class="splash-rule" aria-hidden="true"></span>
+          <span class="splash-rule" style="transform: scaleX(1); animation: none;" aria-hidden="true"></span>
           <p class="splash-kicker">TASTE VARIANCE ALGORITHM</p>
         </div>
+        <button class="welcome-cta" id="enterButton" type="button">ENTER TVA</button>
       </div>
-      <audio id="introAudio" preload="auto" aria-hidden="true">
-        <source src="assets/tva-intro.mpeg" type="audio/mpeg" />
-      </audio>
+    </div>
+    
+    <div class="splash-screen" id="splashScreen" role="status" aria-live="polite" aria-label="Opening TVA">
+      <div class="intro-canvas">
+        <svg class="intro-variance" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+          <!-- Baseline -->
+          <path class="v-baseline" vector-effect="non-scaling-stroke" d="M 0 100 L 1000 100" />
+          <!-- Diverging paths -->
+          <path class="v-path v1" vector-effect="non-scaling-stroke" d="M 0 100 C 200 100, 300 10, 500 100 C 700 190, 800 100, 1000 100" />
+          <path class="v-path v2" vector-effect="non-scaling-stroke" d="M 0 100 C 200 100, 300 190, 500 100 C 700 10, 800 100, 1000 100" />
+          <path class="v-path v3" vector-effect="non-scaling-stroke" d="M 0 100 C 250 100, 350 40, 500 100 C 650 160, 750 100, 1000 100" />
+          <path class="v-path v4" vector-effect="non-scaling-stroke" d="M 0 100 C 250 100, 350 160, 500 100 C 650 40, 750 100, 1000 100" />
+          <path class="v-path v5" vector-effect="non-scaling-stroke" d="M 0 100 C 400 100, 450 -50, 500 100 C 550 250, 600 100, 1000 100" />
+          <path class="v-path v6" vector-effect="non-scaling-stroke" d="M 0 100 C 400 100, 450 250, 500 100 C 550 -50, 600 100, 1000 100" />
+        </svg>
+        <div class="intro-core"></div>
+        <div class="intro-logo">
+          <span class="brand-mark intro-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <p class="intro-wordmark">TVA</p>
+          <span class="intro-rule" aria-hidden="true"></span>
+          <p class="intro-kicker">TASTE VARIANCE ALGORITHM</p>
+        </div>
+      </div>
     </div>
     <main class="app-shell">
       <section class="app" aria-label="TVA music recommendations">
@@ -109,7 +93,14 @@
                 <h3 id="trackTitle">Choose a mood</h3>
                 <p id="trackArtist">Start by choosing Chill, Focus, Energy, or Feel good</p>
               </div>
-              <button class="more-button" type="button" aria-label="More options for this song">•••</button>
+              <button class="more-button" id="moreOptionsBtn" type="button" aria-label="More options for this song" aria-haspopup="menu" aria-expanded="false">•••</button>
+              
+              <div class="more-menu" id="moreMenu" role="menu" aria-label="More options" hidden>
+                <button class="menu-item" id="menuShare" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">↗</span> Share</button>
+                <button class="menu-item" id="menuApple" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">♫</span> Open in Apple Music</button>
+                <div class="menu-divider"></div>
+                <button class="menu-item menu-item-danger" id="menuPass" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">×</span> Not for me</button>
+              </div>
             </div>
             <div class="progress-wrap" aria-label="Preview progress">
               <input class="progress-range" id="progressControl" type="range" min="0" max="1" step="0.1" value="0" aria-label="Song progress" disabled />

@@ -23,6 +23,11 @@ const currentTime = $("#currentTime");
 const playButton = $("#playButton");
 const helperText = $("#helperText");
 const saveButton = $("#saveButton");
+const moreOptionsBtn = $("#moreOptionsBtn");
+const moreMenu = $("#moreMenu");
+const menuShare = $("#menuShare");
+const menuApple = $("#menuApple");
+const menuPass = $("#menuPass");
 const profileButton = $(".profile-button");
 const authDialog = $("#authDialog");
 const authForm = $("#authForm");
@@ -50,48 +55,37 @@ const productionList = $("#productionList");
 const greeting = $("#greeting");
 const themeButton = $("#themeButton");
 const splashScreen = $("#splashScreen");
-const introAudio = $("#introAudio");
 let authMode = "login";
 let currentUser = null;
 
 let splashClosed = false;
-let introAudioEnd = 38;
-const INTRO_AUDIO_START = 179;
-const INTRO_AUDIO_END = 217;
 
-function prepareAndPlayIntroAudio() {
-  if (!introAudio || !Number.isFinite(introAudio.duration) || introAudio.duration <= 0) return;
-  const hasFullSource = introAudio.duration > INTRO_AUDIO_END + 1;
-  introAudio.currentTime = hasFullSource ? INTRO_AUDIO_START : 0;
-  introAudioEnd = hasFullSource ? INTRO_AUDIO_END : introAudio.duration;
-  introAudio.play().catch(() => {
-    // Browsers may block sound until the first user gesture; the visual intro still plays.
-  });
-}
+const welcomeScreen = $("#welcomeScreen");
+const enterButton = $("#enterButton");
 
 function closeSplash() {
   if (splashClosed || !splashScreen) return;
   splashClosed = true;
-  introAudio?.pause();
   splashScreen.classList.add("is-hidden");
   window.setTimeout(() => splashScreen.remove(), 500);
 }
-// The cinematic opener runs for 38 seconds including its final fade to the app.
-// There is intentionally no skip button: the sequence is short enough to play once
-// and the TVA experience is revealed automatically at the end.
-const revealSplash = () => window.setTimeout(closeSplash, 37_000);
-if (document.readyState === "complete") revealSplash();
-else window.addEventListener("load", revealSplash, { once: true });
+
+const revealSplash = () => window.setTimeout(closeSplash, 8000);
+
+function startExperience() {
+  if (welcomeScreen) {
+    welcomeScreen.classList.add("is-hidden");
+    setTimeout(() => welcomeScreen.remove(), 600);
+  }
+  document.body.classList.remove("welcome-active");
+  revealSplash();
+}
+
+enterButton?.addEventListener("click", startExperience);
+
 // The opener has no visible skip control; any tap/click on the full-screen scene
 // quietly takes the listener to TVA.
 splashScreen?.addEventListener("pointerup", closeSplash, { passive: true });
-introAudio?.addEventListener("loadedmetadata", prepareAndPlayIntroAudio, { once: true });
-introAudio?.addEventListener("timeupdate", () => {
-  if (introAudio.currentTime >= introAudioEnd - 0.08) closeSplash();
-});
-if (introAudio && introAudio.readyState >= 1) {
-  prepareAndPlayIntroAudio();
-}
 
 const deviceTheme = window.matchMedia("(prefers-color-scheme: dark)");
 let themeMode = "device";
@@ -528,6 +522,70 @@ saveButton.addEventListener("click", async () => {
   renderTrack();
   if (result?.tracks) tracks.forEach((item) => { item.isSaved = result.tracks.some((saved) => saved.id === item.id); });
   helperText.textContent = willSave ? `${track.title} was saved to your library.` : "Removed from your saved music.";
+});
+
+// More Options Menu Logic
+const closeMoreMenu = () => {
+  if (!moreMenu) return;
+  moreMenu.hidden = true;
+  moreOptionsBtn?.setAttribute("aria-expanded", "false");
+};
+
+const toggleMoreMenu = (e) => {
+  if (!moreMenu) return;
+  e.stopPropagation();
+  const isHidden = moreMenu.hidden;
+  moreMenu.hidden = !isHidden;
+  moreOptionsBtn?.setAttribute("aria-expanded", String(isHidden));
+};
+
+moreOptionsBtn?.addEventListener("click", toggleMoreMenu);
+
+document.addEventListener("click", (e) => {
+  if (moreMenu && !moreMenu.hidden && !moreMenu.contains(e.target) && e.target !== moreOptionsBtn) {
+    closeMoreMenu();
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && moreMenu && !moreMenu.hidden) {
+    closeMoreMenu();
+    moreOptionsBtn?.focus();
+  }
+});
+
+
+menuPass?.addEventListener("click", () => { $("#passButton")?.click(); closeMoreMenu(); });
+
+menuApple?.addEventListener("click", () => {
+  const track = tracks[activeTrack];
+  if (track && track.storeUrl) {
+    window.open(track.storeUrl, "_blank");
+  } else {
+    helperText.textContent = "Apple Music link not available for this track.";
+  }
+  closeMoreMenu();
+});
+
+menuShare?.addEventListener("click", async () => {
+  const track = tracks[activeTrack];
+  if (!track) return;
+  const shareUrl = track.storeUrl || window.location.href;
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: track.title,
+        text: `Listen to ${track.title} by ${track.artist} on TVA`,
+        url: shareUrl
+      });
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      helperText.textContent = "Link copied to clipboard!";
+    }
+  } catch (err) {
+    if (err.name !== "AbortError") console.error("Error sharing:", err);
+  }
+  closeMoreMenu();
 });
 
 document.querySelectorAll(".mini-track").forEach((track) => {

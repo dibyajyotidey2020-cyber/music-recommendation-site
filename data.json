@@ -26,7 +26,7 @@
       "mood": "Chill",
       "genres": [],
       "artists": [],
-      "updatedAt": "2026-09-06T20:47:19.489Z"
+      "updatedAt": "2026-09-07T12:26:21.709Z"
     },
     "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b": {
       "userId": "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b",
@@ -67,10 +67,27 @@
     },
     "419ffdff-ac74-436f-a6ec-fe4c7317095e": {
       "userId": "419ffdff-ac74-436f-a6ec-fe4c7317095e",
+      "mood": "Focus",
+      "genres": [],
+      "artists": [],
+      "updatedAt": "2026-09-07T14:48:55.086Z"
+    },
+    "6e29dd33-4d17-48b0-8a6a-6a9b54c798d9": {
+      "userId": "6e29dd33-4d17-48b0-8a6a-6a9b54c798d9",
       "mood": "Chill",
       "genres": [],
       "artists": [],
-      "updatedAt": "2026-09-07T12:03:43.543Z"
+      "updatedAt": "2026-09-07T15:21:18.304Z"
+    },
+    "06b93b8c-dff4-49e0-8a37-058952364f9c": {
+      "userId": "06b93b8c-dff4-49e0-8a37-058952364f9c",
+      "email": "you@gmail.com",
+      "displayName": "Dibyajyoti Dey",
+      "passwordHash": "27013cac1d14806eb50e7f6a242d400d:72dcd6c773a86859af60864e966208acd19eb16afdbe240858dece242f1841e9",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "createdAt": "2026-09-07T15:39:43.882Z"
     }
   },
   "libraries": {
@@ -93,7 +110,13 @@
       "1568091873"
     ],
     "b05b7566-5bdf-4188-b954-cf7a389fec1e": [],
-    "6b7f4103-5ddd-4403-8fdf-0f7ea349340b": []
+    "6b7f4103-5ddd-4403-8fdf-0f7ea349340b": [],
+    "6e29dd33-4d17-48b0-8a6a-6a9b54c798d9": [
+      "1890165329",
+      "1833969245",
+      "1592777504"
+    ],
+    "06b93b8c-dff4-49e0-8a37-058952364f9c": []
   },
   "sessions": {
     "dfb4bb9ea4f1ee6b2c7908ecd731756b25aef4a6efdfcc90d8e39af475904118": {
@@ -115,6 +138,10 @@
     "066229bd3cbb918f0c17d5e54af8ad9547b87e45d95941c77f15ff42564833da": {
       "userId": "6b7f4103-5ddd-4403-8fdf-0f7ea349340b",
       "expiresAt": 1791373901775
+    },
+    "4ae99f895a894f3d5c3fcdb45a5e80edc3d30d091f08d2a738020e481a2a9316": {
+      "userId": "06b93b8c-dff4-49e0-8a37-058952364f9c",
+      "expiresAt": 1791387583882
     }
   },
   "catalog": {
@@ -166,6 +193,19 @@
       "genre": "Pop",
       "source": "itunes"
     },
+    "1592777504": {
+      "id": "1592777504",
+      "title": "Tide",
+      "artist": "Lycoriscoris",
+      "album": "Tide - Single",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/6b/75/56/6b755688-cdfb-d9b1-69e6-a8bded891564/3663729178961_cover.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/5d/8c/ef/5d8cef66-a5bf-f133-3884-26d9320ada76/mzaf_12943661984050847473.plus.aac.p.m4a",
+      "duration": 233080,
+      "length": "3:53",
+      "storeUrl": "https://music.apple.com/us/album/tide/1592777267?i=1592777504&uo=4",
+      "genre": "Ambient",
+      "source": "itunes"
+    },
     "1733731157": {
       "id": "1733731157",
       "title": "No One Noticed",
@@ -188,6 +228,19 @@
       "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/d7/63/7d/d7637dec-cf2d-1455-3398-f1a6340359d0/mzaf_88927986796632454.plus.aac.p.m4a",
       "storeUrl": "https://music.apple.com/us/album/back-to-friends/1786481196?i=1786481197&uo=4",
       "genre": "Indie Rock",
+      "source": "itunes"
+    },
+    "1833969245": {
+      "id": "1833969245",
+      "title": "Chill (feat. Julia Gomez)",
+      "artist": "Anthony Amorim",
+      "album": "LO:ST",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/50/be/37/50be378a-d607-76eb-8a82-9e9ba20774cc/195267263937_cover.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/38/98/3e/38983ec3-2ccf-1cc9-5a08-c86b6ce27b5d/mzaf_11102165371791522786.plus.aac.p.m4a",
+      "duration": 190912,
+      "length": "3:11",
+      "storeUrl": "https://music.apple.com/us/album/chill-feat-julia-gomez/1833969242?i=1833969245&uo=4",
+      "genre": "Indie Pop",
       "source": "itunes"
     },
     "1890165329": {
