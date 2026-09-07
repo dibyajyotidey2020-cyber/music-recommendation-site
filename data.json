@@ -99,6 +99,16 @@
       "genres": [],
       "artists": [],
       "updatedAt": "2026-09-07T16:46:59.265Z"
+    },
+    "906f8911-2dd9-4311-ac0b-46bacef8832a": {
+      "userId": "906f8911-2dd9-4311-ac0b-46bacef8832a",
+      "email": "you@gmail.com",
+      "displayName": "Dibyajyoti Dey",
+      "passwordHash": "f7fc00694d0c7901d51b6ccdda2557cb:7bbff587395e3869b60f99a2d9d475289942637cae85679ce28d54153ecc42bf",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "createdAt": "2026-09-07T17:38:58.411Z"
     }
   },
   "libraries": {
@@ -136,7 +146,8 @@
     "35d527dc-5b9f-46df-93b5-a87432a85590": [
       "1440766128",
       "1786481197"
-    ]
+    ],
+    "906f8911-2dd9-4311-ac0b-46bacef8832a": []
   },
   "sessions": {
     "dfb4bb9ea4f1ee6b2c7908ecd731756b25aef4a6efdfcc90d8e39af475904118": {
@@ -158,6 +169,10 @@
     "066229bd3cbb918f0c17d5e54af8ad9547b87e45d95941c77f15ff42564833da": {
       "userId": "6b7f4103-5ddd-4403-8fdf-0f7ea349340b",
       "expiresAt": 1791373901775
+    },
+    "a2c70541053f99bf23e255a8066d898d82578e7cdd93bc6be5ca64c24e59545a": {
+      "userId": "906f8911-2dd9-4311-ac0b-46bacef8832a",
+      "expiresAt": 1791394738416
     }
   },
   "catalog": {
