@@ -199,7 +199,7 @@ async function openLibrary() {
     const song = document.createElement("div");
     song.className = "library-song";
     const artwork = track.artwork ? `<img class="library-song-art-img" src="${track.artwork}" alt="" loading="lazy">` : `<span class="library-song-art ${track.style || "art-velvet"}" aria-hidden="true"></span>`;
-    song.innerHTML = `${artwork}<span><p class="library-song-title"></p><p class="library-song-artist"></p></span><span class="library-song-actions"><span class="library-song-match"></span><button class="library-song-remove" type="button" aria-label="Remove song">×</button></span>`;
+    song.innerHTML = `${artwork}<span><p class="library-song-title"></p><p class="library-song-artist"></p></span><span class="library-song-actions"><span class="library-song-match"></span><button class="preview-result" aria-label="Play song">▶</button><button class="library-song-remove" type="button" aria-label="Remove song">×</button></span>`;
     song.querySelector(".library-song-title").textContent = track.title;
     song.querySelector(".library-song-artist").textContent = track.artist;
     song.querySelector(".library-song-match").textContent = track.match;
@@ -209,6 +209,16 @@ async function openLibrary() {
       if (response?._error) { helperText.textContent = response._error; return; }
       helperText.textContent = `${track.title} was removed from your library.`;
       await openLibrary();
+    });
+    song.querySelector(".preview-result").addEventListener("click", async () => {
+      selectTrackForHome(track);
+      if (!track.previewUrl) { helperText.textContent = "A preview is not available for this song."; return; }
+      mainAudio.src = track.previewUrl;
+      await mainAudio.play().catch(() => {});
+      playing = true;
+      playButton.classList.add("playing");
+      playButton.setAttribute("aria-label", `Pause ${track.title}`);
+      helperText.textContent = `Playing a preview of ${track.title} in your home player.`;
     });
     libraryList.append(song);
   });

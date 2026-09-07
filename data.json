@@ -81,13 +81,10 @@
     },
     "06b93b8c-dff4-49e0-8a37-058952364f9c": {
       "userId": "06b93b8c-dff4-49e0-8a37-058952364f9c",
-      "email": "you@gmail.com",
-      "displayName": "Dibyajyoti Dey",
-      "passwordHash": "27013cac1d14806eb50e7f6a242d400d:72dcd6c773a86859af60864e966208acd19eb16afdbe240858dece242f1841e9",
       "mood": "Chill",
       "genres": [],
       "artists": [],
-      "createdAt": "2026-09-07T15:39:43.882Z"
+      "updatedAt": "2026-09-07T16:02:02.560Z"
     }
   },
   "libraries": {
