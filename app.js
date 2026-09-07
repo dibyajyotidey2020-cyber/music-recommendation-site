@@ -169,9 +169,9 @@ function updateAuthView(user) {
   }
 }
 
-async function openAccount(message = "") {
-  const result = await api("/api/me");
-  updateAuthView(result?.user || null);
+function openAccount(message = "") {
+  const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+  updateAuthView(user);
   if (message) {
     authStatus.classList.add("error");
     authStatus.textContent = message;
@@ -180,11 +180,10 @@ async function openAccount(message = "") {
   else authDialog.setAttribute("open", "");
 }
 
-async function ensureAuthenticated() {
-  if (currentUser) return true;
-  const result = await api("/api/me");
-  if (result?.user) { updateAuthView(result.user); return true; }
-  await openAccount("Create an account or log in before saving music.");
+function ensureAuthenticated() {
+  const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+  if (user) return true;
+  openAccount('Create an account or log in before saving music.');
   return false;
 }
 
@@ -194,44 +193,58 @@ function showDialog(dialog) {
 }
 
 async function openLibrary() {
-  libraryList.innerHTML = '<p class="library-empty">Loading your library…</p>';
-  showDialog(libraryDialog);
-  const result = await api(`/api/library?userId=${encodeURIComponent(userId)}`);
-  if (result?._error) {
-    libraryList.innerHTML = `<p class="library-empty">${result._error}</p>`;
+  if (!(await ensureAuthenticated())) return;
+  libraryModal.showModal();
+  
+  const tracks = JSON.parse(localStorage.getItem('tva_library')) || [];
+  
+  if (tracks.length === 0) {
+    libraryEmpty.style.display = "block";
+    libraryTracks.innerHTML = "";
     return;
   }
-  if (!result?.tracks?.length) {
-    libraryList.innerHTML = '<p class="library-empty">Nothing saved yet. Tap “Save for later” on a recommendation.</p>';
-    return;
-  }
-  libraryList.innerHTML = "";
-  result.tracks.forEach((track) => {
-    const song = document.createElement("div");
-    song.className = "library-song";
-    const artwork = track.artwork ? `<img class="library-song-art-img" src="${track.artwork}" alt="" loading="lazy">` : `<span class="library-song-art ${track.style || "art-velvet"}" aria-hidden="true"></span>`;
-    song.innerHTML = `${artwork}<span><p class="library-song-title"></p><p class="library-song-artist"></p></span><span class="library-song-actions"><span class="library-song-match"></span><button class="preview-result" aria-label="Play song">▶</button><button class="library-song-remove" type="button" aria-label="Remove song">×</button></span>`;
-    song.querySelector(".library-song-title").textContent = track.title;
-    song.querySelector(".library-song-artist").textContent = track.artist;
-    song.querySelector(".library-song-match").textContent = track.match;
-    song.querySelector(".library-song-remove").addEventListener("click", async () => {
-      if (!(await ensureAuthenticated())) return;
-      const response = await api("/api/library", { method: "POST", body: JSON.stringify({ userId, trackId: track.id, action: "remove", track }) });
-      if (response?._error) { helperText.textContent = response._error; return; }
-      helperText.textContent = `${track.title} was removed from your library.`;
-      await openLibrary();
-    });
-    song.querySelector(".preview-result").addEventListener("click", async () => {
-      selectTrackForHome(track);
-      if (!track.previewUrl) { helperText.textContent = "A preview is not available for this song."; return; }
+  
+  libraryEmpty.style.display = "none";
+  libraryTracks.innerHTML = tracks.map(track => `
+    <div class="library-song">
+      <img src="${track.artwork}" alt="${escapeHtml(track.title)}" class="library-song-art" />
+      <div class="library-song-info">
+        <div class="library-song-title">${escapeHtml(track.title)}</div>
+        <div class="library-song-artist">${escapeHtml(track.artist)}</div>
+      </div>
+      <button class="library-song-play" aria-label="Play ${escapeHtml(track.title)}"><span aria-hidden="true">▶</span></button>
+      <button class="library-song-remove" aria-label="Remove ${escapeHtml(track.title)} from library">✕</button>
+    </div>
+  `).join("");
+  
+  const libraryElements = libraryTracks.querySelectorAll(".library-song");
+  tracks.forEach((track, idx) => {
+    const el = libraryElements[idx];
+    el.querySelector(".library-song-play").addEventListener("click", async () => {
+      mainAudio.pause();
       mainAudio.src = track.previewUrl;
-      await mainAudio.play().catch(() => {});
-      playing = true;
-      playButton.classList.add("playing");
-      playButton.setAttribute("aria-label", `Pause ${track.title}`);
-      helperText.textContent = `Playing a preview of ${track.title} in your home player.`;
+      const t = {...track, isSaved: true};
+      activeTrack = 0;
+      window.tracks = [t]; // Make it the active track array context
+      renderTrack(t);
+      try {
+        await mainAudio.play();
+        updatePlayButton(true);
+      } catch (err) {}
+      libraryModal.close();
     });
-    libraryList.append(song);
+    el.querySelector(".library-song-remove").addEventListener("click", async () => {
+      let lib = JSON.parse(localStorage.getItem('tva_library')) || [];
+      lib = lib.filter(t => t.id !== track.id);
+      localStorage.setItem('tva_library', JSON.stringify(lib));
+      
+      // Update UI if the deleted track is currently playing
+      if (window.tracks && window.tracks[activeTrack] && window.tracks[activeTrack].id === track.id) {
+         window.tracks[activeTrack].isSaved = false;
+         updateSaveButton(false);
+      }
+      openLibrary(); // Re-render
+    });
   });
 }
 
@@ -288,11 +301,19 @@ function renderMusicResults(results, attribution = "") {
 async function loadFeaturedMusic() {
   const requestId = ++musicRequestId;
   const result = await api(`/api/music/featured?mood=${encodeURIComponent(selectedMood)}`);
+  if (result.results) {
+    const skips = JSON.parse(localStorage.getItem('tva_skips')) || [];
+    result.results = result.results.filter(t => !skips.includes(t.id));
+  }
   if (result?.results && requestId === musicRequestId) renderMusicResults(result.results, "Music previews and artwork provided courtesy of iTunes.");
 }
 
 async function loadIntroArtwork() {
   const result = await api("/api/music/featured?mood=Chill");
+  if (result.results) {
+    const skips = JSON.parse(localStorage.getItem('tva_skips')) || [];
+    result.results = result.results.filter(t => !skips.includes(t.id));
+  }
   const artwork = (result?.results || [])
     .map((track) => track.artwork)
     .filter((url) => {
@@ -470,6 +491,10 @@ function moveTrack(direction, message) {
 async function refreshRecommendations() {
   if (!selectedMood) return;
   const result = await api(`/api/music/featured?mood=${encodeURIComponent(selectedMood)}`);
+  if (result.results) {
+    const skips = JSON.parse(localStorage.getItem('tva_skips')) || [];
+    result.results = result.results.filter(t => !skips.includes(t.id));
+  }
   if (result?.results?.length) {
     tracks = result.results.map(normalizeMusicTrack);
     lastMusicResults = [...tracks];
@@ -530,14 +555,43 @@ progressControl.addEventListener("input", () => {
 
 $("#nextButton").addEventListener("click", () => moveTrack(1));
 $("#backButton").addEventListener("click", () => moveTrack(-1));
-$("#passButton").addEventListener("click", () => moveTrack(1, "Got it — we’ll make the next recommendation closer to your taste."));
+$("#passButton").addEventListener("click", () => {
+    if (tracks[activeTrack]) {
+       let skips = JSON.parse(localStorage.getItem('tva_skips')) || [];
+       skips.push(tracks[activeTrack].id);
+       localStorage.setItem('tva_skips', JSON.stringify(skips));
+    }
+    moveTrack(1, "Got it — we’ll make the next recommendation closer to your taste.");
+  });
 
 saveButton.addEventListener("click", async () => {
+  if (!tracks[activeTrack]) return;
   const track = tracks[activeTrack];
-  if (!track || track.id === "empty") return;
+  const willSave = !saveButton.classList.contains("saved");
+
   if (!(await ensureAuthenticated())) return;
-  const willSave = !track.isSaved;
-  const result = await api("/api/library", { method: "POST", body: JSON.stringify({ userId, trackId: track.id, action: willSave ? "save" : "remove", track }) });
+
+  saveButton.disabled = true;
+  const originalHtml = saveButton.innerHTML;
+  saveButton.innerHTML = "<span aria-hidden='true'>⏳</span> Saving...";
+
+  try {
+    let library = JSON.parse(localStorage.getItem('tva_library')) || [];
+    if (willSave) {
+      if (!library.some(t => t.id === track.id)) {
+        library.push({...track, isSaved: true});
+      }
+    } else {
+      library = library.filter(t => t.id !== track.id);
+    }
+    localStorage.setItem('tva_library', JSON.stringify(library));
+    
+    track.isSaved = willSave;
+    updateSaveButton(willSave);
+  } finally {
+    saveButton.disabled = false;
+  }
+});
   if (result?._error) { helperText.textContent = result._error; return; }
   track.isSaved = willSave;
   renderTrack();
@@ -667,21 +721,38 @@ authForm.addEventListener("submit", async (event) => {
   authStatus.classList.remove("error");
   authStatus.textContent = authMode === "signup" ? "Creating your account…" : "Signing you in…";
   const form = new FormData(authForm);
-  const endpoint = authMode === "signup" ? "/api/auth/register" : "/api/auth/login";
-  const result = await api(endpoint, { method: "POST", body: JSON.stringify({ email: form.get("email"), password: form.get("password"), displayName: form.get("displayName") }) });
-  authSubmit.disabled = false;
-  if (result?._error) {
+  
+  const email = form.get("email").trim();
+  const password = form.get("password");
+  
+  if (!email || !password) {
     authStatus.classList.add("error");
-    authStatus.textContent = result._error;
+    authStatus.textContent = "Please fill out all fields.";
+    authSubmit.disabled = false;
     return;
   }
-  updateAuthView(result.user);
+  
+  const user = { 
+    userId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(), 
+    email, 
+    displayName: form.get("displayName") || "Demo User" 
+  };
+  
+  localStorage.setItem("tva_demo_user", JSON.stringify(user));
+  authSubmit.disabled = false;
+  
+  updateAuthView(user);
   await refreshRecommendations();
-  helperText.textContent = `Welcome to TVA, ${result.user.displayName || "listener"}.`;
+  helperText.textContent = `Welcome to TVA, ${user.displayName || "listener"}.`;
 });
 
-logoutButton.addEventListener("click", async () => {
-  await api("/api/auth/logout", { method: "POST" });
+logoutButton.addEventListener("click", () => {
+  localStorage.removeItem("tva_demo_user");
+  updateAuthView(null);
+  authModal.close();
+  // Call openLibrary if it's currently open to close it
+  try { libraryModal.close(); } catch(e) {}
+});
   updateAuthView(null);
   authDialog.close();
   helperText.textContent = "You’re signed out. Your guest recommendations are still available.";
@@ -689,7 +760,7 @@ logoutButton.addEventListener("click", async () => {
 
 renderTrack();
 updateGreeting();
-api("/api/me").then((result) => updateAuthView(result?.user || null));
+updateAuthView(JSON.parse(localStorage.getItem('tva_demo_user')));
 setInterval(updateGreeting, 60_000);
 loadIntroArtwork();
 refreshRecommendations();
