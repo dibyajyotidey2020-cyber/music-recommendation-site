@@ -34,6 +34,16 @@
       "genres": [],
       "artists": [],
       "updatedAt": "2026-09-07T07:19:53.201Z"
+    },
+    "b106eec9-5d98-4240-98ea-7d497e9579ad": {
+      "userId": "b106eec9-5d98-4240-98ea-7d497e9579ad",
+      "email": "test-inspect@example.com",
+      "displayName": "Test Inspector",
+      "passwordHash": "6e72396de6998adec1e8575b3b6b03a8:c2b87dcc23225b60fedc17323ce3466eeb9af6d75230405013e982643c45bcb1",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "createdAt": "2026-09-07T10:27:52.402Z"
     }
   },
   "libraries": {
@@ -51,7 +61,10 @@
       "1590036021"
     ],
     "865ec3f1-66cb-4cde-8d36-77ac1e4e0588": [],
-    "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b": []
+    "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b": [],
+    "b106eec9-5d98-4240-98ea-7d497e9579ad": [
+      "1568091873"
+    ]
   },
   "sessions": {
     "dfb4bb9ea4f1ee6b2c7908ecd731756b25aef4a6efdfcc90d8e39af475904118": {
@@ -61,6 +74,10 @@
     "0b36def9f2df3487be0bc4332a0f4b25c672187569be77b8a1e828df5ea4a7fd": {
       "userId": "74d53fcf-9010-4dd6-b6ff-fb71e90bdb7b",
       "expiresAt": 1791320328055
+    },
+    "5766965d7a6cd89db3c1401c0b19c72f931b560eab621b6b69f7ccada429c983": {
+      "userId": "b106eec9-5d98-4240-98ea-7d497e9579ad",
+      "expiresAt": 1791368872402
     }
   },
   "catalog": {
@@ -83,6 +100,19 @@
       "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/eb/ca/25/ebca2596-cd1e-b295-91a3-771c868d0a79/191404113868.png/100x100bb.jpg",
       "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/08/22/2e/08222e25-43f5-20e6-a442-b8127ac83368/mzaf_1689070223363740216.plus.aac.p.m4a",
       "storeUrl": "https://music.apple.com/us/album/someone-like-you/1544491232?i=1544491998&uo=4",
+      "genre": "Pop",
+      "source": "itunes"
+    },
+    "1568091873": {
+      "id": "1568091873",
+      "title": "Upbeat Pop",
+      "artist": "331Music",
+      "album": "Summer Pop Music",
+      "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/0d/32/b3/0d32b3fb-7d3f-cb4b-9730-edb2e21e9393/859747710501_cover.jpg/100x100bb.jpg",
+      "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/9a/54/d9/9a54d9a9-6f03-d4fa-ac23-bdf8dfeca961/mzaf_7057423654846066305.plus.aac.p.m4a",
+      "duration": 156395,
+      "length": "2:36",
+      "storeUrl": "https://music.apple.com/us/album/upbeat-pop/1568091541?i=1568091873&uo=4",
       "genre": "Pop",
       "source": "itunes"
     },
