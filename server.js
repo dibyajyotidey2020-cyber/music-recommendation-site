@@ -5,7 +5,17 @@ const crypto = require("crypto");
 
 const PORT = Number(process.env.PORT) || 3001;
 const ROOT = __dirname;
-const DATA_FILE = path.join(ROOT, "data.json");
+const isVercel = process.env.VERCEL === "1";
+const LOCAL_DATA_FILE = path.join(ROOT, "data.json");
+const VERCEL_DATA_FILE = "/tmp/data.json";
+
+let DATA_FILE = LOCAL_DATA_FILE;
+if (isVercel) {
+  DATA_FILE = VERCEL_DATA_FILE;
+  if (!fs.existsSync(VERCEL_DATA_FILE) && fs.existsSync(LOCAL_DATA_FILE)) {
+    try { fs.copyFileSync(LOCAL_DATA_FILE, VERCEL_DATA_FILE); } catch (e) { console.error("Could not copy data.json to /tmp", e); }
+  }
+}
 
 const tracks = [
   { id: "velvet-hours", title: "Velvet Hours", artist: "Maya Sol & The Atlas", tag: "LATE-NIGHT INDIE", length: "3:42", art: "VELVET<br>HOURS", style: "art-velvet", progress: "20%", moods: ["Chill", "Feel good"], genres: ["indie", "dreamy"] },
@@ -192,24 +202,19 @@ async function handleApi(req, res, url) {
   if (req.method === "POST" && url.pathname === "/api/auth/login") {
     try {
       const body = await readBody(req);
-      console.log('Login attempt:', { email: body.email, passwordPresent: typeof body.password === 'string' });
       const normalizedEmail = normalizeEmail(body.email);
-      console.log('Normalized email:', normalizedEmail);
       const user = findUserByEmail(normalizedEmail);
-      console.log('User found:', !!user);
       if (!user) {
         return sendJson(res, 401, { error: "Email or password is incorrect" });
       }
       const password = typeof body.password === "string" ? body.password : "";
       const match = passwordMatches(password, user.passwordHash);
-      console.log('Password match:', match);
       if (!match) {
         return sendJson(res, 401, { error: "Email or password is incorrect" });
       }
       const cookie = createSession(user.userId);
       return sendJson(res, 200, { user: safeUser(user) }, { "Set-Cookie": cookie });
     } catch (error) {
-      console.error('Login error:', error);
       return sendJson(res, 400, { error: error.message });
     }
   }
@@ -324,7 +329,7 @@ function contentType(filePath) {
   return { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".mpeg": "audio/mpeg", ".mp3": "audio/mpeg", ".wav": "audio/wav", ".ogg": "audio/ogg" }[path.extname(filePath)] || "application/octet-stream";
 }
 
-const server = http.createServer(async (req, res) => {
+const serverHandler = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   if (url.pathname.startsWith("/api/")) return handleApi(req, res, url);
   if (req.method !== "GET" && req.method !== "HEAD") return sendJson(res, 405, { error: "Method not allowed" });
@@ -356,6 +361,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "HEAD") return res.end();
     fs.createReadStream(filePath).pipe(res);
   }
-});
+};
 
-server.listen(PORT, () => console.log(`TVA is running at http://localhost:${PORT}`));
+if (require.main === module) {
+  const server = http.createServer(serverHandler);
+  server.listen(PORT, () => console.log(`TVA is running at http://localhost:${PORT}`));
+} else {
+  module.exports = serverHandler;
+}
