@@ -109,4 +109,5 @@ if (require.main === module) {
   server.listen(PORT, () => console.log(`TVA is running at http://localhost:${PORT}`));
 } else {
   module.exports = serverHandler;
+  module.exports.handleApi = handleApi;
 }
