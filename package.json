@@ -4,7 +4,7 @@
   "private": true,
   "description": "A mobile-first music recommendation website with a small JSON API.",
   "scripts": {
-    "start": "node server.js"
+    "dev": "node server.js"
   },
   "engines": {
     "node": "24.x"
