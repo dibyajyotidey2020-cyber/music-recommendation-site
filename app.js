@@ -592,12 +592,6 @@ saveButton.addEventListener("click", async () => {
     saveButton.disabled = false;
   }
 });
-  if (result?._error) { helperText.textContent = result._error; return; }
-  track.isSaved = willSave;
-  renderTrack();
-  if (result?.tracks) tracks.forEach((item) => { item.isSaved = result.tracks.some((saved) => saved.id === item.id); });
-  helperText.textContent = willSave ? `${track.title} was saved to your library.` : "Removed from your saved music.";
-});
 
 // More Options Menu Logic
 const closeMoreMenu = () => {
@@ -753,10 +747,7 @@ logoutButton.addEventListener("click", () => {
   // Call openLibrary if it's currently open to close it
   try { libraryModal.close(); } catch(e) {}
 });
-  updateAuthView(null);
-  authDialog.close();
-  helperText.textContent = "You’re signed out. Your guest recommendations are still available.";
-});
+
 
 renderTrack();
 updateGreeting();
