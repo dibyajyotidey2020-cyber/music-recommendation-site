@@ -41,6 +41,17 @@ const loginTab = $("#loginTab");
 const signupTab = $("#signupTab");
 const signedIn = $("#signedIn");
 const logoutButton = $("#logoutButton");
+const forgotPasswordBtn = $("#forgotPasswordBtn");
+const forgotDialog = $("#forgotDialog");
+const forgotForm = $("#forgotForm");
+const forgotStatus = $("#forgotStatus");
+const closeForgot = $("#closeForgot");
+const backToLoginBtn = $("#backToLoginBtn");
+const resetDialog = $("#resetDialog");
+const resetForm = $("#resetForm");
+const resetStatus = $("#resetStatus");
+const backToLoginFromResetBtn = $("#backToLoginFromResetBtn");
+let currentResetToken = null;
 const discoverDialog = $("#discoverDialog");
 const libraryDialog = $("#libraryDialog");
 const libraryList = $("#libraryList");
@@ -618,6 +629,7 @@ $("#profileNav").addEventListener("click", () => openAccount());
 $("#discoverNav").addEventListener("click", openDiscover);
 $("#libraryNav").addEventListener("click", openLibrary);
 $("#closeAuth").addEventListener("click", () => authDialog.close());
+closeForgot?.addEventListener("click", () => forgotDialog.close());
 $("#closeDiscover").addEventListener("click", () => discoverDialog.close());
 $("#closeLibrary").addEventListener("click", () => libraryDialog.close());
 $("#tasteSeeAll").addEventListener("click", openProductions);
@@ -681,3 +693,75 @@ api("/api/me").then((result) => updateAuthView(result?.user || null));
 setInterval(updateGreeting, 60_000);
 loadIntroArtwork();
 refreshRecommendations();
+
+forgotPasswordBtn?.addEventListener("click", () => {
+  authDialog.close();
+  showDialog(forgotDialog);
+});
+
+backToLoginBtn?.addEventListener("click", () => {
+  forgotDialog.close();
+  showDialog(authDialog);
+});
+
+backToLoginFromResetBtn?.addEventListener("click", () => {
+  resetDialog.close();
+  showDialog(authDialog);
+});
+
+forgotForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submitBtn = forgotForm.querySelector("button[type='submit']");
+  submitBtn.disabled = true;
+  forgotStatus.classList.remove("error");
+  forgotStatus.textContent = "Sending...";
+  const email = new FormData(forgotForm).get("email");
+  const result = await api("/api/auth/forgot", { method: "POST", body: JSON.stringify({ email }) });
+  submitBtn.disabled = false;
+  if (result?._error) {
+    forgotStatus.classList.add("error");
+    forgotStatus.textContent = result._error;
+  } else {
+    forgotStatus.textContent = result.message || "Instructions sent.";
+  }
+});
+
+resetForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(resetForm);
+  const password = form.get("password");
+  const confirm = form.get("confirmPassword");
+  
+  if (password !== confirm) {
+    resetStatus.classList.add("error");
+    resetStatus.textContent = "Passwords do not match.";
+    return;
+  }
+  
+  const submitBtn = resetForm.querySelector("button[type='submit']");
+  submitBtn.disabled = true;
+  resetStatus.classList.remove("error");
+  resetStatus.textContent = "Updating password...";
+  
+  const result = await api("/api/auth/reset", { method: "POST", body: JSON.stringify({ token: currentResetToken, password }) });
+  submitBtn.disabled = false;
+  
+  if (result?._error) {
+    resetStatus.classList.add("error");
+    resetStatus.textContent = result._error;
+  } else {
+    resetStatus.textContent = result.message || "Password updated successfully.";
+    backToLoginFromResetBtn.hidden = false;
+    submitBtn.hidden = true;
+  }
+});
+
+// Check for reset token in URL on load
+const urlParams = new URLSearchParams(window.location.search);
+const resetTokenParam = urlParams.get("reset");
+if (resetTokenParam) {
+  currentResetToken = resetTokenParam;
+  // remove token from URL
+  window.history.replaceState({}, document.title, window.location.pathname);
+  setTimeout(() => showDialog(resetDialog), 500);
+}

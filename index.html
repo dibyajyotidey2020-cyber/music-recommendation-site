@@ -168,6 +168,7 @@
               <label class="auth-field" id="nameField" hidden>Display name<input id="nameInput" name="displayName" autocomplete="name" placeholder="What should we call you?" /></label>
               <label class="auth-field">Email<input id="emailInput" name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
               <label class="auth-field">Password<input id="passwordInput" name="password" type="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters" required /></label>
+              <button class="text-button" id="forgotPasswordBtn" type="button" style="align-self: flex-start; margin-top: -10px; margin-bottom: 20px; font-size: 0.85rem; color: var(--text-muted); text-decoration: underline;">Forgot password?</button>
               <button class="auth-submit" id="authSubmit" type="submit">Log in</button>
               <p class="auth-status" id="authStatus" aria-live="polite"></p>
             </form>
@@ -175,6 +176,36 @@
               <p>You’re signed in. Your saved music and taste profile are ready on this device.</p>
               <button class="auth-submit logout-button" id="logoutButton" type="button">Log out</button>
             </div>
+          </div>
+        </dialog>
+
+        <dialog class="auth-dialog" id="forgotDialog" aria-labelledby="forgotTitle">
+          <div class="auth-panel">
+            <button class="auth-close" id="closeForgot" type="button" aria-label="Close panel">×</button>
+            <p class="eyebrow">RECOVERY</p>
+            <h2 id="forgotTitle">Reset password</h2>
+            <p class="auth-subtitle">Enter your registered email address and we'll send you a link to reset your password.</p>
+            <form id="forgotForm">
+              <label class="auth-field">Email<input id="forgotEmailInput" name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+              <button class="auth-submit" id="forgotSubmit" type="submit">Send reset link</button>
+              <p class="auth-status" id="forgotStatus" aria-live="polite"></p>
+            </form>
+            <button class="text-button" id="backToLoginBtn" type="button" style="margin-top: 20px;">Back to login</button>
+          </div>
+        </dialog>
+
+        <dialog class="auth-dialog" id="resetDialog" aria-labelledby="resetTitle">
+          <div class="auth-panel">
+            <p class="eyebrow">RECOVERY</p>
+            <h2 id="resetTitle">New password</h2>
+            <p class="auth-subtitle">Create a new secure password for your account.</p>
+            <form id="resetForm">
+              <label class="auth-field">New password<input id="newPasswordInput" name="password" type="password" minlength="8" placeholder="At least 8 characters" required /></label>
+              <label class="auth-field">Confirm password<input id="confirmPasswordInput" name="confirmPassword" type="password" minlength="8" placeholder="At least 8 characters" required /></label>
+              <button class="auth-submit" id="resetSubmit" type="submit">Update password</button>
+              <p class="auth-status" id="resetStatus" aria-live="polite"></p>
+            </form>
+            <button class="text-button" id="backToLoginFromResetBtn" type="button" style="margin-top: 20px;" hidden>Back to login</button>
           </div>
         </dialog>
 

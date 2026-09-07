@@ -95,13 +95,20 @@
     },
     "35d527dc-5b9f-46df-93b5-a87432a85590": {
       "userId": "35d527dc-5b9f-46df-93b5-a87432a85590",
-      "email": "test2@example.com",
-      "displayName": "true",
-      "passwordHash": "93ad7b767690b458f6d9f5ce00c2c47e:6f890e63d2d3f7f490dbdc918f784e7e9657bb04eccd79e212b09bde2c363fbc",
       "mood": "Chill",
       "genres": [],
       "artists": [],
-      "createdAt": "2026-09-07T16:38:12.412Z"
+      "updatedAt": "2026-09-07T16:46:59.265Z"
+    },
+    "673bf870-248d-44cb-a5ee-50b7b2ea01eb": {
+      "userId": "673bf870-248d-44cb-a5ee-50b7b2ea01eb",
+      "email": "resettest@example.com",
+      "displayName": "TVA listener",
+      "passwordHash": "b8e2c12e3a4488492c4c1b4f20f7fae2:6d3c0722d5e48ce4d5429e01be8f870e16b8041cf7ffbacf36ff12f49762a2db",
+      "mood": "Chill",
+      "genres": [],
+      "artists": [],
+      "createdAt": "2026-09-07T17:08:00.578Z"
     }
   },
   "libraries": {
@@ -136,7 +143,11 @@
       "1440766128",
       "1568740033"
     ],
-    "35d527dc-5b9f-46df-93b5-a87432a85590": []
+    "35d527dc-5b9f-46df-93b5-a87432a85590": [
+      "1440766128",
+      "1786481197"
+    ],
+    "673bf870-248d-44cb-a5ee-50b7b2ea01eb": []
   },
   "sessions": {
     "dfb4bb9ea4f1ee6b2c7908ecd731756b25aef4a6efdfcc90d8e39af475904118": {
@@ -162,6 +173,14 @@
     "13f7d27b5eb2689a6b7d54e4ccdd0b8866f6623092217a914d87d572eba03b9a": {
       "userId": "35d527dc-5b9f-46df-93b5-a87432a85590",
       "expiresAt": 1791391134646
+    },
+    "759aae403d23766d392d1a77270566722940d7417ea6335128cf2e0c5fca7fac": {
+      "userId": "673bf870-248d-44cb-a5ee-50b7b2ea01eb",
+      "expiresAt": 1791392880590
+    },
+    "d1519207676dfcec5121ff31cca488c5b76410e877587c9adcdaa8b5a652a922": {
+      "userId": "673bf870-248d-44cb-a5ee-50b7b2ea01eb",
+      "expiresAt": 1791393004987
     }
   },
   "catalog": {
@@ -287,5 +306,6 @@
       "genre": "Alternative",
       "source": "itunes"
     }
-  }
+  },
+  "resetTokens": {}
 }

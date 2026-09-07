@@ -25,6 +25,7 @@ data.users ||= {};
 data.libraries ||= {};
 data.sessions ||= {};
 data.catalog ||= {};
+data.resetTokens ||= {};
 
 function persist() {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
@@ -218,6 +219,57 @@ async function handleApi(req, res, url) {
     if (sessionId) delete data.sessions[sessionId];
     persist();
     return sendJson(res, 200, { ok: true }, { "Set-Cookie": "aura_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0" });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/auth/forgot") {
+    try {
+      const body = await readBody(req);
+      const email = normalizeEmail(body.email);
+      if (!email) return sendJson(res, 400, { error: "Enter a valid email address" });
+      
+      const user = findUserByEmail(email);
+      if (user) {
+        const token = crypto.randomBytes(32).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+        data.resetTokens[tokenHash] = {
+          userId: user.userId,
+          expiresAt: Date.now() + 30 * 60 * 1000
+        };
+        persist();
+        console.log(`[DEV] Password reset link for ${email}: http://localhost:${PORT}/?reset=${token}`);
+      }
+      
+      return sendJson(res, 200, { message: "If an account exists for this email, we've sent instructions to reset your password." });
+    } catch (error) {
+      return sendJson(res, 400, { error: error.message });
+    }
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/auth/reset") {
+    try {
+      const body = await readBody(req);
+      const { token, password } = body;
+      if (!token || typeof token !== "string") return sendJson(res, 400, { error: "Invalid or missing token" });
+      if (typeof password !== "string" || password.length < 8) return sendJson(res, 400, { error: "Password must be at least 8 characters" });
+      
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      const resetRecord = data.resetTokens[tokenHash];
+      
+      if (!resetRecord || resetRecord.expiresAt < Date.now()) {
+        return sendJson(res, 400, { error: "Reset token is invalid or has expired." });
+      }
+      
+      const user = data.users[resetRecord.userId];
+      if (!user) return sendJson(res, 400, { error: "User not found." });
+      
+      user.passwordHash = hashPassword(password);
+      delete data.resetTokens[tokenHash];
+      persist();
+      
+      return sendJson(res, 200, { message: "Password reset successfully. You can now log in." });
+    } catch (error) {
+      return sendJson(res, 400, { error: error.message });
+    }
   }
 
   if (req.method === "GET" && url.pathname === "/api/preferences") {
