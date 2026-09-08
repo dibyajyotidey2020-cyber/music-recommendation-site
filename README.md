@@ -1,34 +1,185 @@
-# TVA music recommendation site
+# 🎵 TVA — Taste Variance Algorithm
 
-## Run locally
+[![Frontend](https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JavaScript-blue)](https://github.com/dibyajyotidey2020-cyber/music-recommendation-site)
+[![Backend](https://img.shields.io/badge/Backend-Node.js-green)](https://nodejs.org/)
+[![Deployment](https://img.shields.io/badge/Deployed%20on-Vercel-black)](https://vercel.com/)
+[![Music API](https://img.shields.io/badge/Music%20Data-iTunes%20Search%20API-lightgrey)](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/)
 
-1. Install Node.js.
-2. Double-click `start-aura.bat` (or open a terminal in this folder and run `npm start`).
-3. Keep that window open while using the website.
-4. Open `http://localhost:3000`.
+> **A mood-driven music discovery platform designed to make discovering music more intentional, interactive, and personal.**
 
-The home player starts empty on purpose. Choose Chill, Focus, Energy, or Feel good to load real catalog recommendations. Saving requires an account; open Library to remove any saved song.
+TVA — **Taste Variance Algorithm** — is a lightweight music discovery web application built around the idea that music discovery should respond to how a listener feels, not only what they usually listen to.
 
-Each page load begins with a silent TVA opening animation. Tap anywhere to go straight to Home.
+Users choose a mood, receive music recommendations, evaluate mood and taste fit through a Match Score, preview tracks, save music for later, manage their library, and explore music through a responsive listening interface.
 
-Use the appearance button in the top bar to cycle through Light, Dark, and Device. Device mode follows the operating system theme and updates automatically when it changes.
+---
 
-## Backend v2 API
+## 🎯 Project Vision
 
-- `POST /api/auth/register` — create an account with `email`, `password`, and optional `displayName`.
-- `POST /api/auth/login` — start a 30-day session.
-- `POST /api/auth/logout` — end the current session.
-- `GET /api/me` — return the signed-in user.
-- `GET /api/recommendations?mood=Chill` — return mood-matched tracks.
-- `POST /api/preferences` — save `mood`, `genres`, and `artists`.
-- `GET /api/library` and `POST /api/library` — read or update saved tracks.
-- `GET /api/music/search?q=...` — search real songs and artists.
-- `GET /api/music/featured?mood=...` — load real catalog suggestions for a mood.
+Traditional music discovery often depends heavily on genres, charts, popularity, or predefined playlists.
 
-The current storage is `data.json`, intentionally kept simple while the project is being learned. Before a public launch, move this data to an online database and add rate limiting, email verification, and password-reset flows.
+TVA approaches discovery from another direction:
 
-## Real music
+**Start with the listener's current mood → discover music that fits that mood → interact with the recommendation → save or dismiss it.**
 
-Discover now searches the iTunes Search API for real catalog metadata, artwork, store links, and previews where available. Previews and artwork are promotional content; keep the iTunes attribution and link users to the store rather than downloading or hosting the audio yourself.
+The goal is to create a more intentional discovery experience while keeping the application lightweight and accessible.
 
-The home player mirrors the selected catalog preview. Full-length playback requires a licensed provider player (for example Spotify Web Playback SDK or Apple MusicKit) and user authorization; the iTunes Search API does not provide full recordings.
+---
+
+# ✨ Core Features
+
+## 1. 🧠 Mood-Based Music Discovery
+
+TVA begins the discovery process with mood selection.
+
+Available moods:
+
+- ❄️ Chill
+- ○ Focus
+- ↗ Energy
+- ☼ Feel Good
+
+The selected mood guides the recommendation process and determines the type of music presented to the listener.
+
+---
+
+## 2. 🎯 Match Score
+
+Each recommendation includes a **Match Score** representing the application's current evaluation of:
+
+**Mood + Taste Fit**
+
+This gives users an immediate indication of how well a recommendation fits the current discovery context.
+
+---
+
+## 3. 🎧 Interactive Music Player
+
+TVA includes an integrated music preview player supporting:
+
+- Play
+- Pause
+- Resume
+- Previous
+- Next
+- Progress control
+- Track selection
+- Audio preview playback
+
+The application uses preview audio provided through the music catalog API rather than full-length commercial streaming.
+
+---
+
+## 4. ♡ Save for Later
+
+Users can save tracks directly from the recommendation interface.
+
+Saved tracks can later be accessed through the Library.
+
+The save state is reflected directly in the interface and persists in browser storage.
+
+---
+
+## 5. 📚 Personal Library
+
+The Library provides a dedicated space for saved music.
+
+Users can:
+
+- View saved tracks
+- Play saved tracks
+- Remove saved tracks
+- Maintain saved state after refreshing the page
+
+Library data is stored locally in the browser.
+
+---
+
+## 6. 🚫 Not For Me
+
+Users can dismiss recommendations that do not match their preferences.
+
+This allows the current recommendation flow to account for tracks the listener does not want to hear again.
+
+---
+
+## 7. 🔎 Music Search & Discovery
+
+TVA provides music search functionality for discovering tracks and artists beyond the generated recommendation feed.
+
+Search results are retrieved from the connected music catalog API.
+
+---
+
+## 8. 👤 User Account & Profile
+
+TVA includes an account experience with:
+
+- Sign Up
+- Login
+- Logout
+- Profile information
+- User name
+- Gmail / Email
+
+The account interface keeps user information separate from saved music and updates based on the currently active user.
+
+---
+
+## 9. 🌗 Theme System
+
+TVA supports multiple appearance modes:
+
+- Light Mode
+- Dark Mode
+- Device / System Preference
+
+The interface uses a centralized theme system to maintain consistent styling across the application.
+
+---
+
+## 10. 📱 Responsive Mobile Experience
+
+The interface is designed to work across desktop and mobile screen sizes.
+
+The mobile experience includes a persistent bottom navigation for:
+
+- Home
+- Discovery
+- Library
+- Profile
+
+The navigation remains accessible while scrolling through the main content.
+
+---
+
+# 🧠 Recommendation Flow
+
+TVA currently follows a lightweight mood-driven discovery model:
+
+```text
+User
+  │
+  ▼
+Select Mood
+  │
+  ▼
+Mood-specific Recommendation Request
+  │
+  ▼
+Music Catalog Search
+  │
+  ▼
+Candidate Tracks
+  │
+  ▼
+TVA Recommendation Logic
+  │
+  ▼
+Match Score
+  │
+  ▼
+Recommendation
+  │
+  ├── Play
+  ├── Save for Later
+  └── Not For Me
