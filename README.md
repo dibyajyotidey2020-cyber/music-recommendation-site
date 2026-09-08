@@ -1,96 +1,119 @@
 # 🎵 TVA — Taste Variance Algorithm
+<p align="left">
+  <img src="https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JavaScript-0A66C2?style=flat-square">
+  <img src="https://img.shields.io/badge/Backend-Node.js-339933?style=flat-square&logo=node.js&logoColor=white">
+  <img src="https://img.shields.io/badge/API-iTunes%20Search%20API-555555?style=flat-square">
+  <img src="https://img.shields.io/badge/Deployment-Vercel-000000?style=flat-square&logo=vercel&logoColor=white">
+  <img src="https://img.shields.io/badge/Storage-localStorage-7B61FF?style=flat-square">
+</p>
 
 > A mood-driven music discovery platform designed to make discovering music more intentional, interactive, and personal.
 
-TVA connects mood selection, taste fit, music recommendations, and interactive listening in one lightweight web experience.
+TVA — **Taste Variance Algorithm** — is a lightweight music discovery web application built around mood-based discovery. Users select how they feel, receive recommendations, evaluate mood and taste fit through a Match Score, preview tracks, save music, manage their library, and explore music through a responsive listening experience.
 
 ---
 
 ## 🎯 Project Vision
 
-**Choose how you feel → discover music that fits → listen → save or skip.**
+TVA follows a simple discovery idea:
 
-TVA is built around mood-driven music discovery rather than simply browsing genres, charts, or popular tracks.
+**Choose a mood → discover music that fits → listen → save or skip.**
 
----
-
-## ✨ Core Features
-
-- 🧠 **Mood-Based Discovery** — Chill, Focus, Energy, Feel Good
-- 🎯 **Match Score** — mood + taste fit
-- 🎧 **Music Player** — play, pause, next, previous, progress & previews
-- ♡ **Save for Later** — save and unsave tracks
-- 📚 **Personal Library** — view, play & remove saved tracks
-- 🚫 **Not For Me** — dismiss unwanted recommendations
-- 🔎 **Music Search** — discover tracks & artists
-- 👤 **User Account** — signup, login, logout & profile
-- 🌗 **Theme System** — Light, Dark & Device modes
-- 📱 **Responsive UI** — desktop & mobile support
-- 📌 **Mobile Navigation** — Home, Discovery, Library & Profile
+The project focuses on making music discovery more guided and interactive instead of relying only on genres, charts, or popular tracks.
 
 ---
 
-## 🏗️ Technology & Engineering
+## 🛠️ Tech Stack & Engineering
 
-### Frontend
+- **Frontend:** HTML5, CSS3, Vanilla JavaScript
+- **UI:** Responsive CSS, CSS Custom Properties, Browser Audio APIs
+- **Backend:** Node.js
+- **Serverless:** Vercel Functions
+- **Music Data:** Apple iTunes Search API
+- **Storage:** Browser `localStorage`
+- **Deployment:** Vercel
 
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Responsive CSS
-- CSS Custom Properties
-- Browser Audio APIs
-
-### Backend & API
-
-- Node.js
-- Vercel Serverless Functions
-- REST-style API endpoints
-
-### Music Data
-
-- Apple iTunes Search API
-
-### Storage
-
-- Browser `localStorage`
-
-### Deployment
-
-- Vercel
+The frontend is framework-free, while the `/api/music/` routes provide server-side access to the external music catalog.
 
 ---
 
-## 🔄 Recommendation Flow
+## ✨ Core Features & Technical Highlights
 
-    Mood Selection
-          ↓
-    Music Catalog Search
-          ↓
-    TVA Recommendation Logic
-          ↓
-    Match Score
-          ↓
-    Play / Save / Not For Me
+### 1. 🧠 Mood-Based Music Discovery
 
-TVA currently uses lightweight mood-driven recommendation logic rather than machine-learning-based personalization.
+Users can select from four moods:
+
+**Chill • Focus • Energy • Feel Good**
+
+The selected mood guides the recommendation process and determines the type of music presented.
+
+### 2. 🎯 Match Score
+
+Recommendations include a **Match Score** representing the application's current **mood + taste fit** evaluation.
+
+### 3. 🎧 Interactive Music Player
+
+Integrated preview playback with:
+
+- Play / Pause
+- Resume
+- Next / Previous
+- Progress control
+- Track selection
+- Audio previews
+
+### 4. ♡ Save for Later & Library
+
+Users can save tracks, access them through their personal Library, play saved tracks, and remove them when required.
+
+### 5. 🚫 Not For Me
+
+Users can dismiss recommendations that do not fit their preferences.
+
+### 6. 🔎 Music Search
+
+Search tracks and artists through the connected music catalog.
+
+### 7. 👤 User Account & Profile
+
+Includes:
+
+- Sign Up
+- Login
+- Logout
+- User profile
+- User name
+- Gmail / Email
+
+### 8. 🌗 Theme System
+
+Supports:
+
+**Light • Dark • Device**
+
+### 9. 📱 Responsive Mobile Experience
+
+Responsive desktop/mobile interface with persistent mobile navigation for:
+
+**Home • Discovery • Library • Profile**
 
 ---
 
-## 🔌 API
+## 🔌 API Layer
 
-- `GET /api/music/search` — searches the music catalog
-- `GET /api/music/featured` — provides featured music suggestions
+- `GET /api/music/search` — music and artist search
+- `GET /api/music/featured` — featured music suggestions
+
+These endpoints connect the application to the Apple iTunes Search API.
 
 ---
 
 ## 📁 Project Structure
 
     music-recommendation-site/
-    ├── api/
-    │   └── music/
-    │       ├── featured.js
-    │       └── search.js
+    ├── api/music/
+    │   ├── featured.js
+    │   └── search.js
     ├── assets/
     │   └── tva-intro.mpeg
     ├── app.js
@@ -100,7 +123,6 @@ TVA currently uses lightweight mood-driven recommendation logic rather than mach
     ├── package.json
     ├── package-lock.json
     ├── vercel.json
-    ├── .gitignore
     └── README.md
 
 ---
@@ -112,15 +134,15 @@ TVA currently uses lightweight mood-driven recommendation logic rather than mach
     npm install
     npm run dev
 
-Open:
-
-    http://localhost:3001
+Open `http://localhost:3001`
 
 ---
 
-## 🌐 Live Website
+## 🌐 Live Project
 
-**[Launch TVA](https://music-recommendation-site-omega.vercel.app/)**
+<a href="https://music-recommendation-site-omega.vercel.app/">
+  <img src="https://img.shields.io/badge/LIVE%20WEBSITE-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Website">
+</a>
 
 ---
 
@@ -128,14 +150,8 @@ Open:
 
 - User and library data are stored locally in the browser.
 - Music playback uses available iTunes preview audio.
-- TVA does not provide full-length commercial music streaming.
-- The current recommendation system is mood-driven rather than ML-based.
-
----
-
-## 🧪 Project Status
-
-TVA is currently deployed and functional with mood-based discovery, recommendations, Match Score, music previews, Save for Later, Library, Not For Me, user accounts, profile information, themes, search, and responsive mobile navigation.
+- Full-length commercial music streaming is not provided.
+- The current recommendation system is mood-driven rather than machine-learning-based.
 
 ---
 
@@ -145,16 +161,20 @@ TVA is currently deployed and functional with mood-based discovery, recommendati
 
 **Solo project**
 
-[GitHub](https://github.com/dibyajyotidey2020-cyber) · [LinkedIn](https://www.linkedin.com/in/dibyajyoti-dey/)
+<a href="mailto:dibyajyotidey2020@gmail.com">
+  <img src="https://img.shields.io/badge/GMAIL-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail">
+</a>
+<a href="https://www.linkedin.com/in/dibyajyoti-dey/">
+  <img src="https://img.shields.io/badge/LINKEDIN-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn">
+</a>
+<a href="https://github.com/dibyajyotidey2020-cyber">
+  <img src="https://img.shields.io/badge/GITHUB-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+</a>
 
 ---
 
-## 🔗 Project Links
+## 🔗 Repository
 
-🌐 **Live Website:** https://music-recommendation-site-omega.vercel.app/
-
-💻 **Repository:** https://github.com/dibyajyotidey2020-cyber/music-recommendation-site
-
-👤 **GitHub:** https://github.com/dibyajyotidey2020-cyber
-
-💼 **LinkedIn:** https://www.linkedin.com/in/dibyajyoti-dey/
+<a href="https://github.com/dibyajyotidey2020-cyber/music-recommendation-site">
+  <img src="https://img.shields.io/badge/VIEW%20REPOSITORY-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository">
+</a>
