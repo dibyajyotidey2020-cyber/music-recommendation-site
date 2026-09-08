@@ -122,7 +122,14 @@ deviceTheme.addEventListener("change", () => { if (themeMode === "device") apply
 function updateGreeting() {
   const hour = new Date().getHours();
   const period = hour >= 5 && hour < 12 ? "morning" : hour >= 12 && hour < 17 ? "afternoon" : hour >= 17 && hour < 21 ? "evening" : "hello";
-  const name = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0] || "Demo User") : "listener";
+  let name = "listener";
+  if (currentUser) {
+    let displayName = currentUser.displayName;
+    if (!displayName || !displayName.trim()) {
+      displayName = currentUser.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+    name = displayName;
+  }
   greeting.textContent = period === "hello" ? `HELLO, ${name}` : `GOOD ${period.toUpperCase()}, ${name}`;
 }
 
@@ -159,11 +166,20 @@ function updateAuthView(user) {
   currentUser = user;
   updateGreeting();
   if (user) {
-    const displayName = user.displayName || user.email.split('@')[0] || "Demo User";
+    let displayName = user.displayName;
+    if (!displayName || !displayName.trim()) {
+      displayName = user.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
     const initials = (displayName || "A").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
     profileButton.querySelector("span").textContent = initials;
     authTitle.textContent = `Hi, ${displayName}`;
-    authSubtitle.textContent = user.email;
+    authSubtitle.textContent = "Manage your account and library.";
+    
+    const profileNameDisplay = document.getElementById("profileNameDisplay");
+    const profileEmailDisplay = document.getElementById("profileEmailDisplay");
+    if (profileNameDisplay) profileNameDisplay.textContent = displayName;
+    if (profileEmailDisplay) profileEmailDisplay.textContent = user.email;
+
     authForm.hidden = true;
     signedIn.hidden = false;
   } else {

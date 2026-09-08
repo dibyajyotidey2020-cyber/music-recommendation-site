@@ -173,7 +173,13 @@
               <p class="auth-status" id="authStatus" aria-live="polite"></p>
             </form>
             <div class="signed-in" id="signedIn" hidden>
-              <p>You’re signed in. Your saved music and taste profile are ready on this device.</p>
+              <div class="profile-details">
+                <p class="profile-label">User Name</p>
+                <p class="profile-value" id="profileNameDisplay"></p>
+                <p class="profile-label">Gmail</p>
+                <p class="profile-value" id="profileEmailDisplay"></p>
+              </div>
+              <p>Your saved music and taste profile are ready on this device.</p>
               <button class="auth-submit logout-button" id="logoutButton" type="button">Log out</button>
             </div>
           </div>
