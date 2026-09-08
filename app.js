@@ -122,7 +122,7 @@ deviceTheme.addEventListener("change", () => { if (themeMode === "device") apply
 function updateGreeting() {
   const hour = new Date().getHours();
   const period = hour >= 5 && hour < 12 ? "morning" : hour >= 12 && hour < 17 ? "afternoon" : hour >= 17 && hour < 21 ? "evening" : "hello";
-  const name = currentUser?.displayName?.trim() || "listener";
+  const name = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0] || "Demo User") : "listener";
   greeting.textContent = period === "hello" ? `HELLO, ${name}` : `GOOD ${period.toUpperCase()}, ${name}`;
 }
 
@@ -133,6 +133,10 @@ async function api(path, options = {}) {
     if (!response.ok) return { _error: payload.error || "Something went wrong" };
     return payload;
   } catch { return { _error: "The backend is not running. Start it with npm start." }; }
+}
+
+function escapeHtml(str) {
+  return String(str || "").replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
 }
 
 function setAuthMode(mode) {
@@ -155,9 +159,10 @@ function updateAuthView(user) {
   currentUser = user;
   updateGreeting();
   if (user) {
-    const initials = (user.displayName || user.email || "A").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+    const displayName = user.displayName || user.email.split('@')[0] || "Demo User";
+    const initials = (displayName || "A").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
     profileButton.querySelector("span").textContent = initials;
-    authTitle.textContent = `Hi, ${user.displayName || "listener"}`;
+    authTitle.textContent = `Hi, ${displayName}`;
     authSubtitle.textContent = user.email;
     authForm.hidden = true;
     signedIn.hidden = false;
@@ -194,20 +199,20 @@ function showDialog(dialog) {
 
 async function openLibrary() {
   if (!(await ensureAuthenticated())) return;
-  libraryModal.showModal();
+  libraryDialog.showModal();
   
-  const tracks = JSON.parse(localStorage.getItem('tva_library')) || [];
+  const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+  const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
+  const tracks = JSON.parse(localStorage.getItem(libraryKey)) || [];
   
   if (tracks.length === 0) {
-    libraryEmpty.style.display = "block";
-    libraryTracks.innerHTML = "";
+    libraryList.innerHTML = '<p class="library-empty">Your library is empty. Save songs to see them here.</p>';
     return;
   }
   
-  libraryEmpty.style.display = "none";
-  libraryTracks.innerHTML = tracks.map(track => `
+  libraryList.innerHTML = tracks.map(track => `
     <div class="library-song">
-      <img src="${track.artwork}" alt="${escapeHtml(track.title)}" class="library-song-art" />
+      <img src="${escapeHtml(track.artwork)}" alt="${escapeHtml(track.title)}" class="library-song-art" />
       <div class="library-song-info">
         <div class="library-song-title">${escapeHtml(track.title)}</div>
         <div class="library-song-artist">${escapeHtml(track.artist)}</div>
@@ -217,7 +222,7 @@ async function openLibrary() {
     </div>
   `).join("");
   
-  const libraryElements = libraryTracks.querySelectorAll(".library-song");
+  const libraryElements = libraryList.querySelectorAll(".library-song");
   tracks.forEach((track, idx) => {
     const el = libraryElements[idx];
     el.querySelector(".library-song-play").addEventListener("click", async () => {
@@ -229,19 +234,21 @@ async function openLibrary() {
       renderTrack(t);
       try {
         await mainAudio.play();
-        updatePlayButton(true);
+        updatePlayButton && updatePlayButton(true);
+        playButton.classList.add("playing");
       } catch (err) {}
-      libraryModal.close();
+      libraryDialog.close();
     });
     el.querySelector(".library-song-remove").addEventListener("click", async () => {
-      let lib = JSON.parse(localStorage.getItem('tva_library')) || [];
+      let lib = JSON.parse(localStorage.getItem(libraryKey)) || [];
       lib = lib.filter(t => t.id !== track.id);
-      localStorage.setItem('tva_library', JSON.stringify(lib));
+      localStorage.setItem(libraryKey, JSON.stringify(lib));
       
       // Update UI if the deleted track is currently playing
       if (window.tracks && window.tracks[activeTrack] && window.tracks[activeTrack].id === track.id) {
          window.tracks[activeTrack].isSaved = false;
-         updateSaveButton(false);
+         saveButton.classList.toggle("saved", false);
+         saveButton.innerHTML = '<span aria-hidden="true">♡</span> Save for later';
       }
       openLibrary(); // Re-render
     });
@@ -256,13 +263,17 @@ function renderMusicResults(results, attribution = "") {
     musicResults.innerHTML = '<p class="library-empty">No songs found. Try another artist or title.</p>';
     return;
   }
-  const savedIds = tracks.filter(t => t.isSaved).map(t => t.id);
+  const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+  const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
+  const library = JSON.parse(localStorage.getItem(libraryKey)) || [];
+  const savedIds = library.map(t => t.id);
+  
   results.forEach((track) => {
     const result = document.createElement("div");
     result.className = "music-result";
     const alreadySaved = savedIds.includes(track.id);
-    const artwork = track.artwork ? `<img src="${track.artwork}" alt="" loading="lazy">` : '<span class="library-song-art art-velvet" aria-hidden="true"></span>';
-    result.innerHTML = `${artwork}<span><p class="music-result-title"></p><p class="music-result-artist"></p></span><span class="music-result-actions"><button type="button" class="preview-result" aria-label="Preview song">▶</button><button type="button" class="save-result${alreadySaved ? '" data-saved="true' : ''}" aria-label="${alreadySaved ? 'Remove song' : 'Save song'}">${alreadySaved ? '♥' : '♡'}</button>${track.storeUrl ? `<a href="${track.storeUrl}" target="_blank" rel="noopener" aria-label="Open song page">↗</a>` : ""}</span>`;
+    const artwork = track.artwork ? `<img src="${escapeHtml(track.artwork)}" alt="" loading="lazy">` : '<span class="library-song-art art-velvet" aria-hidden="true"></span>';
+    result.innerHTML = `${artwork}<span><p class="music-result-title"></p><p class="music-result-artist"></p></span><span class="music-result-actions"><button type="button" class="preview-result" aria-label="Preview song">▶</button><button type="button" class="save-result${alreadySaved ? '" data-saved="true' : ''}" aria-label="${alreadySaved ? 'Remove song' : 'Save song'}">${alreadySaved ? '♥' : '♡'}</button>${track.storeUrl ? `<a href="${escapeHtml(track.storeUrl)}" target="_blank" rel="noopener" aria-label="Open song page">↗</a>` : ""}</span>`;
     result.querySelector(".music-result-title").textContent = track.title || "Unknown song";
     result.querySelector(".music-result-artist").textContent = `${track.artist || "Unknown artist"}${track.album ? ` · ${track.album}` : ""}`;
     result.querySelector(".preview-result").addEventListener("click", async () => {
@@ -279,8 +290,20 @@ function renderMusicResults(results, attribution = "") {
       const button = event.currentTarget;
       if (!(await ensureAuthenticated())) return;
       const saved = button.dataset.saved === "true";
-      const response = await api("/api/library", { method: "POST", body: JSON.stringify({ userId, trackId: track.id, action: saved ? "remove" : "save", track }) });
-      if (response?._error) { helperText.textContent = response._error; return; }
+      
+      const currentUser = JSON.parse(localStorage.getItem('tva_demo_user'));
+      const libKey = currentUser && currentUser.userId ? `tva_library_${currentUser.userId}` : 'tva_library';
+      let lib = JSON.parse(localStorage.getItem(libKey)) || [];
+      
+      if (saved) {
+        lib = lib.filter(t => t.id !== track.id);
+      } else {
+        if (!lib.some(t => t.id === track.id)) {
+          lib.push({...track, isSaved: true});
+        }
+      }
+      localStorage.setItem(libKey, JSON.stringify(lib));
+      
       button.dataset.saved = String(!saved);
       button.textContent = saved ? "♡" : "♥";
       button.setAttribute("aria-label", saved ? "Save song" : "Remove song");
@@ -424,7 +447,12 @@ function renderTrack() {
   progressControl.style.setProperty("--progress", "0%");
   currentTime.textContent = "0:00";
   playButton.setAttribute("aria-label", `${playing ? "Pause" : "Play"} ${track.title}`);
-  const saved = Boolean(track.isSaved);
+  
+  const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+  const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
+  const library = JSON.parse(localStorage.getItem(libraryKey)) || [];
+  const saved = library.some(t => t.id === track.id);
+  
   saveButton.classList.toggle("saved", saved);
   saveButton.innerHTML = saved ? '<span aria-hidden="true">♥</span> Saved to library' : '<span aria-hidden="true">♡</span> Save for later';
   renderTasteTracks();
@@ -576,7 +604,10 @@ saveButton.addEventListener("click", async () => {
   saveButton.innerHTML = "<span aria-hidden='true'>⏳</span> Saving...";
 
   try {
-    let library = JSON.parse(localStorage.getItem('tva_library')) || [];
+    const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+    const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
+    let library = JSON.parse(localStorage.getItem(libraryKey)) || [];
+    
     if (willSave) {
       if (!library.some(t => t.id === track.id)) {
         library.push({...track, isSaved: true});
@@ -584,10 +615,11 @@ saveButton.addEventListener("click", async () => {
     } else {
       library = library.filter(t => t.id !== track.id);
     }
-    localStorage.setItem('tva_library', JSON.stringify(library));
+    localStorage.setItem(libraryKey, JSON.stringify(library));
     
     track.isSaved = willSave;
-    updateSaveButton(willSave);
+    saveButton.classList.toggle("saved", willSave);
+    saveButton.innerHTML = willSave ? '<span aria-hidden="true">♥</span> Saved to library' : '<span aria-hidden="true">♡</span> Save for later';
   } finally {
     saveButton.disabled = false;
   }
@@ -729,7 +761,7 @@ authForm.addEventListener("submit", async (event) => {
   const user = { 
     userId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(), 
     email, 
-    displayName: form.get("displayName") || "Demo User" 
+    displayName: form.get("displayName") || "" 
   };
   
   localStorage.setItem("tva_demo_user", JSON.stringify(user));
@@ -737,15 +769,15 @@ authForm.addEventListener("submit", async (event) => {
   
   updateAuthView(user);
   await refreshRecommendations();
-  helperText.textContent = `Welcome to TVA, ${user.displayName || "listener"}.`;
+  helperText.textContent = `Welcome to TVA, ${user.displayName || user.email.split('@')[0] || "listener"}.`;
 });
 
 logoutButton.addEventListener("click", () => {
   localStorage.removeItem("tva_demo_user");
   updateAuthView(null);
-  authModal.close();
+  try { authDialog.close(); } catch(e) {}
   // Call openLibrary if it's currently open to close it
-  try { libraryModal.close(); } catch(e) {}
+  try { libraryDialog.close(); } catch(e) {}
 });
 
 
