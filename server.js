@@ -9,6 +9,7 @@ const moodSearchTerms = { Chill: "chill indie", Focus: "focus ambient", Energy: 
 
 const AUDIUS_APP_NAME = "TVA_Taste_Variance_Algorithm";
 const AUDIUS_API_KEY = process.env.AUDIUS_API_KEY || ""; 
+const DISCOVER_BATCH_SIZE = 20;
 
 function sendJson(res, status, payload, extraHeaders = {}) {
   res.writeHead(status, {
@@ -40,11 +41,13 @@ async function fetchWithTimeout(resource, options = {}) {
   }
 }
 
-async function searchAudius(term, limit) {
+async function searchAudius(term, limit, offset = 0) {
   try {
     const endpoint = new URL("https://api.audius.co/v1/tracks/search");
     endpoint.searchParams.set("query", term);
     endpoint.searchParams.set("app_name", AUDIUS_APP_NAME);
+    endpoint.searchParams.set("limit", String(limit));
+    endpoint.searchParams.set("offset", String(offset));
     const response = await fetchWithTimeout(endpoint, { timeout: 5000 });
     if (!response.ok) return null;
     const payload = await response.json();
@@ -76,12 +79,13 @@ async function searchAudius(term, limit) {
   }
 }
 
-async function searchITunes(term, limit) {
+async function searchITunes(term, limit, offset = 0) {
   const endpoint = new URL("https://itunes.apple.com/search");
   endpoint.searchParams.set("term", term);
   endpoint.searchParams.set("media", "music");
   endpoint.searchParams.set("entity", "song");
   endpoint.searchParams.set("limit", String(limit));
+  endpoint.searchParams.set("offset", String(offset));
   const response = await fetchWithTimeout(endpoint, { timeout: 6000 });
   if (!response.ok) throw new Error("Music catalog is temporarily unavailable");
   const payload = await response.json();
@@ -110,16 +114,17 @@ async function handleApi(req, res, url) {
 
   if (req.method === "GET" && url.pathname === "/api/music/search") {
     const term = (url.searchParams.get("q") || "").trim().slice(0, 80);
+    const offset = parseInt(url.searchParams.get("offset")) || 0;
     if (term.length < 2) return sendJson(res, 400, { error: "Enter at least two characters to search" });
     try {
-      let results = await searchAudius(term, 12);
+      let results = await searchAudius(term, DISCOVER_BATCH_SIZE, offset);
       let attribution = "Music provided by Audius";
       
       if (!results || results.length === 0) {
-        results = await searchITunes(term, 12);
+        results = await searchITunes(term, DISCOVER_BATCH_SIZE, offset);
         attribution = "Music previews provided courtesy of iTunes";
       }
-      return sendJson(res, 200, { query: term, results, attribution });
+      return sendJson(res, 200, { query: term, results, attribution, offset });
     } catch (error) { 
       return sendJson(res, 502, { error: error.message }); 
     }
@@ -127,15 +132,16 @@ async function handleApi(req, res, url) {
 
   if (req.method === "GET" && url.pathname === "/api/music/featured") {
     const term = moodSearchTerms[url.searchParams.get("mood")] || moodSearchTerms.Chill;
+    const offset = parseInt(url.searchParams.get("offset")) || 0;
     try {
-      let results = await searchAudius(term, 6);
+      let results = await searchAudius(term, DISCOVER_BATCH_SIZE, offset);
       let attribution = "Music provided by Audius";
       
       if (!results || results.length === 0) {
-        results = await searchITunes(term, 6);
+        results = await searchITunes(term, DISCOVER_BATCH_SIZE, offset);
         attribution = "Music previews provided courtesy of iTunes";
       }
-      return sendJson(res, 200, { results, attribution });
+      return sendJson(res, 200, { results, attribution, offset });
     } catch (error) { 
       return sendJson(res, 502, { error: error.message }); 
     }

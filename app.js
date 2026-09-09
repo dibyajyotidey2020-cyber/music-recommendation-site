@@ -5,6 +5,13 @@ let selectedMood = null;
 let userId;
 let musicRequestId = 0;
 let lastMusicResults = [];
+
+const DISCOVER_BATCH_SIZE = 20;
+let currentSearchTerm = "";
+let currentSearchOffset = 0;
+let discoverSeenTrackIds = new Set();
+let discoverLoading = false;
+
 try {
   userId = localStorage.getItem("aura-user-id") || crypto.randomUUID();
   localStorage.setItem("aura-user-id", userId);
@@ -271,11 +278,20 @@ async function openLibrary() {
   });
 }
 
-function renderMusicResults(results, attribution = "") {
-  lastMusicResults = results || [];
-  renderTasteTracks();
-  musicResults.innerHTML = "";
-  if (!results?.length) {
+function renderMusicResults(results, attribution = "", append = false) {
+  if (!append) {
+    lastMusicResults = [];
+    discoverSeenTrackIds.clear();
+    musicResults.innerHTML = "";
+    renderTasteTracks();
+  } else {
+    const oldBtn = musicResults.querySelector(".load-more-btn");
+    if (oldBtn) oldBtn.remove();
+    const oldAttr = musicResults.querySelector(".music-attribution");
+    if (oldAttr) oldAttr.remove();
+  }
+
+  if (!results?.length && !append) {
     musicResults.innerHTML = '<p class="library-empty">No songs found. Try another artist or title.</p>';
     return;
   }
@@ -284,7 +300,10 @@ function renderMusicResults(results, attribution = "") {
   const library = JSON.parse(localStorage.getItem(libraryKey)) || [];
   const savedIds = library.map(t => t.id);
   
-  results.forEach((track) => {
+  (results || []).forEach((track) => {
+    if (discoverSeenTrackIds.has(track.id)) return;
+    discoverSeenTrackIds.add(track.id);
+    lastMusicResults.push(track);
     const result = document.createElement("div");
     result.className = "music-result";
     const alreadySaved = savedIds.includes(track.id);
@@ -329,6 +348,19 @@ function renderMusicResults(results, attribution = "") {
     });
     musicResults.append(result);
   });
+  
+  if (!append) renderTasteTracks();
+
+  if (results && results.length >= DISCOVER_BATCH_SIZE) {
+    const loadMoreBtn = document.createElement("button");
+    loadMoreBtn.className = "text-button load-more-btn";
+    loadMoreBtn.style.margin = "20px auto";
+    loadMoreBtn.style.display = "block";
+    loadMoreBtn.textContent = "Load more";
+    loadMoreBtn.addEventListener("click", loadMoreDiscover);
+    musicResults.append(loadMoreBtn);
+  }
+
   if (attribution) {
     const note = document.createElement("p");
     note.className = "music-attribution";
@@ -471,6 +503,17 @@ function renderTrack() {
   
   saveButton.classList.toggle("saved", saved);
   saveButton.innerHTML = saved ? '<span aria-hidden="true">♥</span> Saved to library' : '<span aria-hidden="true">♡</span> Save for later';
+  
+  if (menuApple) {
+    if (track.source === "audius") {
+      menuApple.textContent = "Open on Audius";
+      menuApple.style.display = track.storeUrl ? "" : "none";
+    } else {
+      menuApple.textContent = "Open in Apple Music";
+      menuApple.style.display = "";
+    }
+  }
+  
   renderTasteTracks();
 }
 
@@ -746,15 +789,38 @@ document.querySelectorAll("[data-discover-mood]").forEach((choice) => {
   });
 });
 
+async function loadMoreDiscover() {
+  if (discoverLoading || !currentSearchTerm) return;
+  const btn = document.querySelector(".load-more-btn");
+  if (btn) btn.textContent = "Loading...";
+  discoverLoading = true;
+  const requestId = ++musicRequestId;
+  currentSearchOffset += DISCOVER_BATCH_SIZE;
+  const result = await api(`/api/music/search?q=${encodeURIComponent(currentSearchTerm)}&offset=${currentSearchOffset}`);
+  if (requestId !== musicRequestId) return;
+  discoverLoading = false;
+  if (result?._error) {
+    if (btn) btn.textContent = "Error. Try again.";
+    return;
+  }
+  renderMusicResults(result.results, result.attribution, true);
+}
+
 musicSearchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const term = musicSearchInput.value.trim();
+  if (!term) return;
   const requestId = ++musicRequestId;
+  currentSearchTerm = term;
+  currentSearchOffset = 0;
+  discoverSeenTrackIds.clear();
+  discoverLoading = true;
   musicResults.innerHTML = '<p class="library-empty">Searching the music catalog…</p>';
-  const result = await api(`/api/music/search?q=${encodeURIComponent(term)}`);
+  const result = await api(`/api/music/search?q=${encodeURIComponent(term)}&offset=${currentSearchOffset}`);
   if (requestId !== musicRequestId) return;
+  discoverLoading = false;
   if (result?._error) { musicResults.innerHTML = `<p class="library-empty">${result._error}</p>`; return; }
-  renderMusicResults(result.results, result.attribution);
+  renderMusicResults(result.results, result.attribution, false);
 });
 
 authForm.addEventListener("submit", async (event) => {
