@@ -101,8 +101,8 @@
             
             <div class="player-top-bar">
               <button class="round-button secondary minimize-btn" id="minimizeBtn" type="button" aria-label="Minimize player">⏷</button>
-              <span class="player-context">NOW PLAYING</span>
-              <button class="more-button" id="moreOptionsBtn" type="button" aria-label="More options" aria-haspopup="menu" aria-expanded="false">•••</button>
+              <span class="player-context"></span>
+              <button class="more-button" id="moreOptionsBtn" type="button" aria-label="More options" aria-haspopup="menu" aria-expanded="false">⋮</button>
             </div>
 
             <div class="more-menu" id="moreMenu" role="menu" aria-label="More options" hidden>
@@ -110,6 +110,15 @@
               <button class="menu-item" id="menuShare" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">↗</span> Share</button>
               <div class="menu-divider"></div>
               <button class="menu-item menu-item-danger" id="menuPass" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">×</span> Not for me</button>
+            </div>
+
+            <div class="player-header-info">
+              <div class="info-group">
+                <p class="track-kicker" id="trackTag">YOUR MIX STARTS HERE</p>
+                <h3 id="trackTitle">Choose a mood</h3>
+                <p id="trackArtist">Start by choosing Chill, Focus, Energy, or Feel good</p>
+              </div>
+              <button class="reaction-button save" id="saveButton" type="button" aria-label="Save for later"><span aria-hidden="true">♡</span></button>
             </div>
 
             <div class="album-art-container">
@@ -122,37 +131,28 @@
                 <span class="art-label" id="artLabel">CHOOSE<br />A MOOD</span>
               </div>
             </div>
-            
-            <div class="track-info">
-              <div class="info-group">
-                <p class="track-kicker" id="trackTag">YOUR MIX STARTS HERE</p>
-                <h3 id="trackTitle">Choose a mood</h3>
-                <p id="trackArtist">Start by choosing Chill, Focus, Energy, or Feel good</p>
+
+            <div class="match-group">
+              <span class="match" id="matchText">98% TVA MATCH</span>
+              <p class="match-reason" id="matchReason">Matches your mood and taste</p>
+            </div>
+
+            <div class="player-bottom-area">
+              <div class="progress-wrap" aria-label="Preview progress">
+                <input class="progress-range" id="progressControl" type="range" min="0" max="1" step="0.01" value="0" aria-label="Song progress" disabled />
+                <div class="time-row"><span id="currentTime">0:00</span><span id="trackLength">—</span></div>
               </div>
-              <div class="match-group">
-                <span class="match" id="matchText">98% TVA MATCH</span>
-                <p class="match-reason" id="matchReason">Matches your mood and taste</p>
+
+              <div class="play-row immersive-controls">
+                <button class="round-button tertiary" id="shuffleBtn" type="button" aria-label="Shuffle" disabled>🔀</button>
+                <button class="round-button secondary" id="backButton" type="button" aria-label="Previous track">⏮</button>
+                <button class="play-button primary" id="playButton" type="button" aria-label="Play selected song">
+                  <span class="play-icon" aria-hidden="true"></span>
+                </button>
+                <button class="round-button secondary" id="nextButton" type="button" aria-label="Next track">⏭</button>
+                <button class="round-button tertiary queue-btn" id="upNextBtn" type="button" aria-label="Up Next">⊞</button>
               </div>
-            </div>
-
-            <div class="progress-wrap" aria-label="Preview progress">
-              <input class="progress-range" id="progressControl" type="range" min="0" max="1" step="0.01" value="0" aria-label="Song progress" disabled />
-              <div class="time-row"><span id="currentTime">0:00</span><span id="trackLength">—</span></div>
-            </div>
-
-            <div class="play-row immersive-controls">
-              <button class="round-button tertiary" id="shuffleBtn" type="button" aria-label="Shuffle" disabled>🔀</button>
-              <button class="round-button secondary" id="backButton" type="button" aria-label="Previous track">⏮</button>
-              <button class="play-button primary" id="playButton" type="button" aria-label="Play selected song">
-                <span class="play-icon" aria-hidden="true"></span>
-              </button>
-              <button class="round-button secondary" id="nextButton" type="button" aria-label="Next track">⏭</button>
-              <button class="round-button tertiary queue-btn" id="upNextBtn" type="button" aria-label="Up Next">⊞</button>
-            </div>
-
-            <div class="reaction-row">
-              <button class="reaction-button pass" id="passButton" type="button"><span aria-hidden="true">×</span> Not for me</button>
-              <button class="reaction-button save" id="saveButton" type="button"><span aria-hidden="true">♡</span> Save for later</button>
+              <button class="reaction-button pass sr-only" id="passButton" type="button"><span aria-hidden="true">×</span> Not for me</button>
             </div>
           </article>
           
