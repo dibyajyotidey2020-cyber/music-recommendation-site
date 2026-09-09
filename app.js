@@ -11,6 +11,7 @@ let currentSearchTerm = "";
 let currentSearchOffset = 0;
 let discoverSeenTrackIds = new Set();
 let discoverLoading = false;
+let currentPlayedTrackId = null;
 
 try {
   userId = localStorage.getItem("aura-user-id") || crypto.randomUUID();
@@ -226,62 +227,278 @@ async function openLibrary() {
   
   const user = JSON.parse(localStorage.getItem('tva_demo_user'));
   const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
-  const tracks = JSON.parse(localStorage.getItem(libraryKey)) || [];
+  let tracks = JSON.parse(localStorage.getItem(libraryKey)) || [];
   
-  if (tracks.length === 0) {
-    libraryList.innerHTML = '<p class="library-empty">Your library is empty. Save songs to see them here.</p>';
-    return;
+  // Sort newest first
+  tracks.sort((a, b) => {
+    if (a.savedAt && b.savedAt) return new Date(b.savedAt) - new Date(a.savedAt);
+    if (a.savedAt) return -1;
+    if (b.savedAt) return 1;
+    return 0; // Legacy tracks without savedAt keep their order (which was append order)
+  });
+  
+  // Get active filter
+  const filterVal = window.currentLibraryFilter || 'all';
+  const filteredTracks = tracks.filter(t => {
+    if (filterVal === 'audius') return t.source === 'audius';
+    if (filterVal === 'itunes') return t.source === 'itunes';
+    return true;
+  });
+  
+  const filterHtml = `
+    <div class="library-filter">
+      <button data-filter="all" class="filter-btn ${filterVal === 'all' ? 'selected' : ''}">All</button>
+      <button data-filter="audius" class="filter-btn ${filterVal === 'audius' ? 'selected' : ''}">Audius</button>
+      <button data-filter="itunes" class="filter-btn ${filterVal === 'itunes' ? 'selected' : ''}">iTunes</button>
+    </div>
+  `;
+
+  if (filteredTracks.length === 0) {
+    let emptyMsg = "Your library is empty. Save songs to see them here.";
+    if (tracks.length > 0) {
+      emptyMsg = `No ${filterVal === 'audius' ? 'Audius' : 'iTunes'} tracks saved yet.`;
+    }
+    libraryList.innerHTML = filterHtml + `<p class="library-empty">${emptyMsg}</p>`;
+  } else {
+    libraryList.innerHTML = filterHtml + filteredTracks.map(track => `
+      <div class="library-song">
+        <img src="${escapeHtml(track.artwork)}" alt="${escapeHtml(track.title)}" class="library-song-art" />
+        <div class="library-song-info">
+          <div class="library-song-title">${escapeHtml(track.title)}</div>
+          <div class="library-song-artist">${escapeHtml(track.artist)}</div>
+        </div>
+        <button class="library-song-play" aria-label="Play ${escapeHtml(track.title)}"><span aria-hidden="true">▶</span></button>
+        <button class="library-song-remove" aria-label="Remove ${escapeHtml(track.title)} from library">✕</button>
+        <button class="library-song-more" aria-label="More options for ${escapeHtml(track.title)}">•••</button>
+      </div>
+    `).join("");
   }
   
-  libraryList.innerHTML = tracks.map(track => `
-    <div class="library-song">
-      <img src="${escapeHtml(track.artwork)}" alt="${escapeHtml(track.title)}" class="library-song-art" />
-      <div class="library-song-info">
-        <div class="library-song-title">${escapeHtml(track.title)}</div>
-        <div class="library-song-artist">${escapeHtml(track.artist)}</div>
-      </div>
-      <button class="library-song-play" aria-label="Play ${escapeHtml(track.title)}"><span aria-hidden="true">▶</span></button>
-      <button class="library-song-remove" aria-label="Remove ${escapeHtml(track.title)} from library">✕</button>
-    </div>
-  `).join("");
+  // Bind filter buttons
+  libraryList.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      window.currentLibraryFilter = e.target.dataset.filter;
+      openLibrary();
+    });
+  });
+
+  if (filteredTracks.length > 0) {
+    const libraryElements = libraryList.querySelectorAll(".library-song");
+    filteredTracks.forEach((track, idx) => {
+      const el = libraryElements[idx];
+      if (!el) return;
+      el.querySelector(".library-song-play").addEventListener("click", async () => {
+        mainAudio.pause();
+        mainAudio.src = track.previewUrl;
+        const t = {...track, isSaved: true};
+        activeTrack = 0;
+        window.tracks = [t]; // Make it the active track array context
+        renderTrack(t);
+        try {
+          await mainAudio.play();
+          updatePlayButton && updatePlayButton(true);
+          playButton.classList.add("playing");
+        } catch (err) {}
+        libraryDialog.close();
+      });
+      el.querySelector(".library-song-remove").addEventListener("click", async () => {
+        let lib = JSON.parse(localStorage.getItem(libraryKey)) || [];
+        lib = lib.filter(t => t.id !== track.id);
+        localStorage.setItem(libraryKey, JSON.stringify(lib));
+        
+        // Update UI if the deleted track is currently playing
+        if (window.tracks && window.tracks[activeTrack] && window.tracks[activeTrack].id === track.id) {
+           window.tracks[activeTrack].isSaved = false;
+           saveButton.classList.toggle("saved", false);
+           saveButton.innerHTML = '<span aria-hidden="true">♡</span> Save for later';
+        }
+        openLibrary(); // Re-render
+      });
+      el.querySelector(".library-song-more")?.addEventListener("click", (e) => toggleMoreMenu(e, track));
+    });
+  }
+}
+// openLibrary implementation moved up
+
+let discoverSectionsCache = null;
+
+async function buildDiscoverSections() {
+  const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+  const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
+  const library = JSON.parse(localStorage.getItem(libraryKey)) || [];
+  const tasteProfileStr = localStorage.getItem('tva_taste_profile');
+  const recentInteractionsStr = localStorage.getItem('tva_recent_interactions');
   
-  const libraryElements = libraryList.querySelectorAll(".library-song");
-  tracks.forEach((track, idx) => {
-    const el = libraryElements[idx];
-    el.querySelector(".library-song-play").addEventListener("click", async () => {
-      mainAudio.pause();
-      mainAudio.src = track.previewUrl;
-      const t = {...track, isSaved: true};
-      activeTrack = 0;
-      window.tracks = [t]; // Make it the active track array context
-      renderTrack(t);
-      try {
-        await mainAudio.play();
-        updatePlayButton && updatePlayButton(true);
-        playButton.classList.add("playing");
-      } catch (err) {}
-      libraryDialog.close();
-    });
-    el.querySelector(".library-song-remove").addEventListener("click", async () => {
-      let lib = JSON.parse(localStorage.getItem(libraryKey)) || [];
-      lib = lib.filter(t => t.id !== track.id);
-      localStorage.setItem(libraryKey, JSON.stringify(lib));
-      
-      // Update UI if the deleted track is currently playing
-      if (window.tracks && window.tracks[activeTrack] && window.tracks[activeTrack].id === track.id) {
-         window.tracks[activeTrack].isSaved = false;
-         saveButton.classList.toggle("saved", false);
-         saveButton.innerHTML = '<span aria-hidden="true">♡</span> Save for later';
+  const tasteProfile = tasteProfileStr ? JSON.parse(tasteProfileStr) : { genres: {}, totalInteractions: 0 };
+  const recentInteractions = recentInteractionsStr ? JSON.parse(recentInteractionsStr) : [];
+  
+  const sections = [];
+  const maxTracksPerSection = 8;
+  const excludeIds = new Set(discoverSeenTrackIds);
+  
+  // 1. Because You Saved [Genre]
+  const savedGenres = {};
+  library.forEach(t => {
+    if (t.genre) {
+      const g = t.genre.toLowerCase();
+      savedGenres[g] = (savedGenres[g] || 0) + 1;
+    }
+  });
+  let topSavedGenre = null;
+  let maxSaved = 0;
+  for (const [genre, count] of Object.entries(savedGenres)) {
+    if (count >= 3 && count > maxSaved) {
+      topSavedGenre = genre;
+      maxSaved = count;
+    }
+  }
+  if (topSavedGenre) {
+    const res = await api(`/api/music/search?q=${encodeURIComponent(topSavedGenre)}&offset=0`);
+    if (res && res.results) {
+      const tracks = res.results.filter(t => !excludeIds.has(t.id) && !library.some(libT => libT.id === t.id)).slice(0, maxTracksPerSection);
+      if (tracks.length > 0) {
+        tracks.forEach(t => excludeIds.add(t.id));
+        sections.push({
+          id: 'saved-genre',
+          title: `Because You Saved ${topSavedGenre.charAt(0).toUpperCase() + topSavedGenre.slice(1)}`,
+          tracks
+        });
       }
-      openLibrary(); // Re-render
+    }
+  }
+
+  // 2. Fresh Discoveries
+  const interactionsCount = tasteProfile.totalInteractions || 0;
+  const hasRecentSave = library.some(t => {
+    if (!t.savedAt) return false;
+    const days = (new Date() - new Date(t.savedAt)) / (1000 * 60 * 60 * 24);
+    return days <= 7;
+  });
+  if (interactionsCount >= 5 && hasRecentSave) {
+    const recentGenres = {};
+    recentInteractions.forEach(int => {
+      if (int.genre) {
+        const g = int.genre.toLowerCase();
+        recentGenres[g] = (recentGenres[g] || 0) + 1;
+      }
     });
+    let topRecentGenre = Object.keys(recentGenres).sort((a,b) => recentGenres[b] - recentGenres[a])[0] || 'indie';
+    const res = await api(`/api/music/search?q=${encodeURIComponent(topRecentGenre)}&offset=20`);
+    if (res && res.results) {
+       const tracks = res.results.filter(t => !excludeIds.has(t.id)).slice(0, maxTracksPerSection);
+       if (tracks.length > 0) {
+         tracks.forEach(t => excludeIds.add(t.id));
+         sections.push({
+           id: 'fresh-discoveries',
+           title: `Fresh Discoveries`,
+           tracks
+         });
+       }
+    }
+  }
+
+  // 3. Explore Something Different
+  if (interactionsCount >= 10 && typeof calculateTasteDrift === 'function') {
+    const drift = calculateTasteDrift();
+    if (drift && drift.isDrifting && drift.driftPercentage >= 20 && drift.topRecentGenres.length > 0) {
+      const targetGenre = drift.topRecentGenres[0].genre;
+      const res = await api(`/api/music/search?q=${encodeURIComponent(targetGenre)}&offset=10`);
+      if (res && res.results) {
+         const tracks = res.results.filter(t => !excludeIds.has(t.id)).slice(0, maxTracksPerSection);
+         if (tracks.length > 0) {
+           tracks.forEach(t => excludeIds.add(t.id));
+           sections.push({
+             id: 'explore',
+             title: `Explore Something Different`,
+             tracks
+           });
+         }
+      }
+    }
+  }
+
+  return sections;
+}
+
+function renderContextualSections(sections) {
+  const container = document.getElementById("discoverContextualSections");
+  if (!container) return;
+  container.innerHTML = "";
+  if (!sections || sections.length === 0) return;
+  
+  const user = JSON.parse(localStorage.getItem('tva_demo_user'));
+  const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
+  const library = JSON.parse(localStorage.getItem(libraryKey)) || [];
+  const savedIds = library.map(t => t.id);
+
+  sections.forEach(sec => {
+    const secEl = document.createElement("section");
+    secEl.className = "discover-section";
+    secEl.innerHTML = `<h3 class="discover-section-title">${escapeHtml(sec.title)}</h3>`;
+    
+    sec.tracks.forEach(track => {
+      discoverSeenTrackIds.add(track.id);
+      lastMusicResults.push(track);
+      const result = document.createElement("div");
+      result.className = "music-result";
+      const alreadySaved = savedIds.includes(track.id);
+      const artwork = track.artwork ? `<img src="${escapeHtml(track.artwork)}" alt="" loading="lazy">` : '<span class="library-song-art art-velvet" aria-hidden="true"></span>';
+      result.innerHTML = `${artwork}<span><p class="music-result-title"></p><p class="music-result-artist"></p></span><span class="music-result-actions"><button type="button" class="preview-result" aria-label="Preview song">▶</button><button type="button" class="save-result${alreadySaved ? '" data-saved="true' : ''}" aria-label="${alreadySaved ? 'Remove song' : 'Save song'}">${alreadySaved ? '♥' : '♡'}</button><button type="button" class="more-result" aria-label="More options for this song">•••</button></span>`;
+      result.querySelector(".music-result-title").textContent = track.title || "Unknown song";
+      result.querySelector(".music-result-artist").textContent = `${track.artist || "Unknown artist"}${track.album ? ` · ${track.album}` : ""}`;
+      result.querySelector(".more-result").addEventListener("click", (e) => toggleMoreMenu(e, track));
+      result.querySelector(".preview-result").addEventListener("click", async () => {
+        selectTrackForHome(track);
+        if (!track.previewUrl) { helperText.textContent = track.source === 'audius' ? "This track is not streamable." : "A preview is not available for this song."; return; }
+        mainAudio.src = track.previewUrl;
+        await mainAudio.play().catch(() => {});
+        playing = true;
+        playButton.classList.add("playing");
+        playButton.setAttribute("aria-label", `Pause ${track.title}`);
+        helperText.textContent = track.source === 'audius' ? `Playing full track: ${track.title} in your home player.` : `Playing a preview of ${track.title} in your home player.`;
+      });
+      result.querySelector(".save-result").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        if (!(await ensureAuthenticated())) return;
+        const saved = button.dataset.saved === "true";
+        
+        const currentUser = JSON.parse(localStorage.getItem('tva_demo_user'));
+        const libKey = currentUser && currentUser.userId ? `tva_library_${currentUser.userId}` : 'tva_library';
+        let lib = JSON.parse(localStorage.getItem(libKey)) || [];
+        
+        if (saved) {
+          lib = lib.filter(t => t.id !== track.id);
+        } else {
+          if (!lib.some(t => t.id === track.id)) {
+            lib.push({...track, isSaved: true, savedAt: new Date().toISOString()});
+            recordTasteInteraction(track, 'save');
+          }
+        }
+        localStorage.setItem(libKey, JSON.stringify(lib));
+        
+        button.dataset.saved = String(!saved);
+        button.textContent = saved ? "♡" : "♥";
+        button.setAttribute("aria-label", saved ? "Save song" : "Remove song");
+        button.classList.add("save-flash");
+        setTimeout(() => button.classList.remove("save-flash"), 800);
+        helperText.textContent = saved ? `${track.title} was removed from your library.` : `${track.title} was saved to your library.`;
+      });
+      secEl.append(result);
+    });
+    
+    container.append(secEl);
   });
 }
 
-function renderMusicResults(results, attribution = "", append = false) {
+function renderMusicResults(results, attribution = "", append = false, skipClear = false) {
   if (!append) {
     lastMusicResults = [];
-    discoverSeenTrackIds.clear();
+    if (!skipClear) {
+      discoverSeenTrackIds.clear();
+      discoverSectionsCache = null;
+      const sectionsContainer = document.getElementById("discoverContextualSections");
+      if (sectionsContainer) sectionsContainer.innerHTML = "";
+    }
     musicResults.innerHTML = "";
     renderTasteTracks();
   } else {
@@ -308,9 +525,10 @@ function renderMusicResults(results, attribution = "", append = false) {
     result.className = "music-result";
     const alreadySaved = savedIds.includes(track.id);
     const artwork = track.artwork ? `<img src="${escapeHtml(track.artwork)}" alt="" loading="lazy">` : '<span class="library-song-art art-velvet" aria-hidden="true"></span>';
-    result.innerHTML = `${artwork}<span><p class="music-result-title"></p><p class="music-result-artist"></p></span><span class="music-result-actions"><button type="button" class="preview-result" aria-label="Preview song">▶</button><button type="button" class="save-result${alreadySaved ? '" data-saved="true' : ''}" aria-label="${alreadySaved ? 'Remove song' : 'Save song'}">${alreadySaved ? '♥' : '♡'}</button>${track.storeUrl ? `<a href="${escapeHtml(track.storeUrl)}" target="_blank" rel="noopener" aria-label="Open song page">↗</a>` : ""}</span>`;
+    result.innerHTML = `${artwork}<span><p class="music-result-title"></p><p class="music-result-artist"></p></span><span class="music-result-actions"><button type="button" class="preview-result" aria-label="Preview song">▶</button><button type="button" class="save-result${alreadySaved ? '" data-saved="true' : ''}" aria-label="${alreadySaved ? 'Remove song' : 'Save song'}">${alreadySaved ? '♥' : '♡'}</button><button type="button" class="more-result" aria-label="More options for this song">•••</button></span>`;
     result.querySelector(".music-result-title").textContent = track.title || "Unknown song";
     result.querySelector(".music-result-artist").textContent = `${track.artist || "Unknown artist"}${track.album ? ` · ${track.album}` : ""}`;
+    result.querySelector(".more-result").addEventListener("click", (e) => toggleMoreMenu(e, track));
     result.querySelector(".preview-result").addEventListener("click", async () => {
       selectTrackForHome(track);
       if (!track.previewUrl) { helperText.textContent = track.source === 'audius' ? "This track is not streamable." : "A preview is not available for this song."; return; }
@@ -334,7 +552,8 @@ function renderMusicResults(results, attribution = "", append = false) {
         lib = lib.filter(t => t.id !== track.id);
       } else {
         if (!lib.some(t => t.id === track.id)) {
-          lib.push({...track, isSaved: true});
+          lib.push({...track, isSaved: true, savedAt: new Date().toISOString()});
+          recordTasteInteraction(track, 'save');
         }
       }
       localStorage.setItem(libKey, JSON.stringify(lib));
@@ -371,12 +590,22 @@ function renderMusicResults(results, attribution = "", append = false) {
 
 async function loadFeaturedMusic() {
   const requestId = ++musicRequestId;
-  const result = await api(`/api/music/featured?mood=${encodeURIComponent(selectedMood)}`);
+  
+  if (!discoverSectionsCache) {
+    discoverSeenTrackIds.clear(); // Reset before building sections
+    discoverSectionsCache = await buildDiscoverSections();
+  }
+  if (requestId === musicRequestId) {
+    renderContextualSections(discoverSectionsCache);
+  }
+  
+  const result = await api(`/api/music/featured?mood=${encodeURIComponent(selectedMood || 'Chill')}`);
   if (result.results) {
     const skips = JSON.parse(localStorage.getItem('tva_skips')) || [];
     result.results = result.results.filter(t => !skips.includes(t.id));
   }
-  if (result?.results && requestId === musicRequestId) renderMusicResults(result.results, "Music previews and artwork provided courtesy of iTunes.");
+  
+  if (result?.results && requestId === musicRequestId) renderMusicResults(result.results, "Music previews and artwork provided courtesy of iTunes.", false, true);
 }
 
 async function loadIntroArtwork() {
@@ -455,6 +684,41 @@ function selectTrackForHome(track) {
   renderTrack();
 }
 
+function getTasteProfile() {
+  try {
+    const profile = JSON.parse(localStorage.getItem('tva_taste_profile'));
+    if (profile && profile.plays && profile.saves && profile.skips) return profile;
+  } catch (e) {}
+  return { plays: { genres: {}, artists: {} }, saves: { genres: {}, artists: {} }, skips: { genres: {}, artists: {} } };
+}
+
+function saveTasteProfile(profile) {
+  localStorage.setItem('tva_taste_profile', JSON.stringify(profile));
+}
+
+function normalizeTasteString(str) {
+  if (!str) return null;
+  return String(str).trim().toLowerCase();
+}
+
+function recordTasteInteraction(track, type) {
+  if (!track || !['play', 'save', 'skip'].includes(type)) return;
+  const profile = getTasteProfile();
+  const typeKey = type + 's';
+  
+  const genre = normalizeTasteString(track.genre);
+  if (genre) {
+    profile[typeKey].genres[genre] = (profile[typeKey].genres[genre] || 0) + 1;
+  }
+  
+  const artist = normalizeTasteString(track.artist);
+  if (artist) {
+    profile[typeKey].artists[artist] = (profile[typeKey].artists[artist] || 0) + 1;
+  }
+  
+  saveTasteProfile(profile);
+}
+
 function computeMatch(track) {
   if (!selectedMood) return "— match";
   const moodGenres = {
@@ -464,13 +728,40 @@ function computeMatch(track) {
     "Feel good": ["pop", "indie pop", "soul", "funk", "reggae", "r&b/soul"]
   };
   let score = 82;
-  const genre = (track.genre || "").toLowerCase();
+  const genre = normalizeTasteString(track.genre) || "";
+  const artist = normalizeTasteString(track.artist) || "";
   const aligned = moodGenres[selectedMood] || [];
+  
   if (aligned.some(g => genre.includes(g))) score += 10;
   else score += 3;
+  
   const hash = [...(track.id || "")].reduce((s, c) => s + c.charCodeAt(0), 0);
   score += (hash % 7) - 2;
-  return `${Math.min(99, Math.max(75, score))}% match`;
+
+  const profile = getTasteProfile();
+  
+  if (genre) {
+    const playG = profile.plays.genres[genre] || 0;
+    const saveG = profile.saves.genres[genre] || 0;
+    const skipG = profile.skips.genres[genre] || 0;
+    
+    if (saveG > 0 || playG > 5) score += Math.min(8, saveG * 2 + Math.floor(playG / 2));
+    if (skipG > 0) score -= Math.min(15, skipG * 3);
+    
+    const totalInteractions = playG + saveG + skipG;
+    if (totalInteractions === 0 && (!aligned.some(g => genre.includes(g)))) score += 4;
+  }
+
+  if (artist) {
+    const playA = profile.plays.artists[artist] || 0;
+    const saveA = profile.saves.artists[artist] || 0;
+    const skipA = profile.skips.artists[artist] || 0;
+    
+    if (saveA > 0 || playA > 2) score += Math.min(6, saveA * 3 + playA);
+    if (skipA > 0) score -= Math.min(20, skipA * 5);
+  }
+
+  return `${Math.min(99, Math.max(10, score))}% match`;
 }
 
 function normalizeMusicTrack(track) {
@@ -631,7 +922,43 @@ mainAudio.addEventListener("ended", () => {
   playing = false;
   playButton.classList.remove("playing");
   playButton.setAttribute("aria-label", `Play ${tracks[activeTrack]?.title || "song"}`);
-  helperText.textContent = tracks[activeTrack]?.source === 'audius' ? "Track ended." : "Preview ended. Full playback requires a connected music service.";
+  currentPlayedTrackId = null;
+
+  if (queue.length > 0) {
+    playNextQueuedTrack();
+  } else {
+    moveTrack(1);
+    const nt = tracks[activeTrack];
+    if (nt && nt.previewUrl) {
+      mainAudio.src = nt.previewUrl;
+      mainAudio.play().catch(() => {
+        helperText.textContent = "Autoplay blocked. Press play to start.";
+      });
+      playing = true;
+      playButton.classList.add("playing");
+    }
+  }
+});
+mainAudio.addEventListener("playing", () => {
+  const active = tracks[activeTrack] || (window.tracks && window.tracks[0]);
+  if (active && active.id !== currentPlayedTrackId) {
+    currentPlayedTrackId = active.id;
+    recordTasteInteraction(active, 'play');
+  }
+  helperText.textContent = (active && active.source === 'audius') ? "Playing full track..." : "Playing a preview...";
+  updateMediaSession(active);
+});
+mainAudio.addEventListener("waiting", () => {
+  helperText.textContent = "Buffering...";
+});
+mainAudio.addEventListener("stalled", () => {
+  helperText.textContent = "Network issue, retrying...";
+});
+mainAudio.addEventListener("canplay", () => {
+  if (helperText.textContent === "Buffering..." || helperText.textContent === "Network issue, retrying...") {
+    const active = tracks[activeTrack];
+    helperText.textContent = active ? (active.source === 'audius' ? "Playing full track..." : "Playing a preview...") : "";
+  }
 });
 mainAudio.addEventListener("loadedmetadata", syncProgress);
 mainAudio.addEventListener("timeupdate", syncProgress);
@@ -640,13 +967,38 @@ progressControl.addEventListener("input", () => {
   syncProgress();
 });
 
-$("#nextButton").addEventListener("click", () => moveTrack(1));
+function playNextQueuedTrack() {
+  if (queue.length === 0) return false;
+  const nextTrack = queue.shift();
+  selectTrackForHome(nextTrack);
+  if (nextTrack.previewUrl) {
+    mainAudio.src = nextTrack.previewUrl;
+    mainAudio.play().catch(() => {
+      helperText.textContent = "Playback blocked by browser. Press play to start.";
+    });
+    playing = true;
+    playButton.classList.add("playing");
+    playButton.setAttribute("aria-label", `Pause ${nextTrack.title}`);
+  }
+  renderUpNextDialog();
+  return true;
+}
+
+$("#nextButton").addEventListener("click", () => {
+  if (queue.length > 0) {
+    playNextQueuedTrack();
+  } else {
+    moveTrack(1);
+  }
+});
+
 $("#backButton").addEventListener("click", () => moveTrack(-1));
 $("#passButton").addEventListener("click", () => {
     if (tracks[activeTrack]) {
        let skips = JSON.parse(localStorage.getItem('tva_skips')) || [];
        skips.push(tracks[activeTrack].id);
        localStorage.setItem('tva_skips', JSON.stringify(skips));
+       recordTasteInteraction(tracks[activeTrack], 'skip');
     }
     moveTrack(1, "Got it — we’ll make the next recommendation closer to your taste.");
   });
@@ -669,7 +1021,8 @@ saveButton.addEventListener("click", async () => {
     
     if (willSave) {
       if (!library.some(t => t.id === track.id)) {
-        library.push({...track, isSaved: true});
+        library.push({...track, isSaved: true, savedAt: new Date().toISOString()});
+        recordTasteInteraction(track, 'save');
       }
     } else {
       library = library.filter(t => t.id !== track.id);
@@ -685,24 +1038,48 @@ saveButton.addEventListener("click", async () => {
 });
 
 // More Options Menu Logic
+let currentMenuTrack = null; // null means activeTrack
+
 const closeMoreMenu = () => {
   if (!moreMenu) return;
   moreMenu.hidden = true;
   moreOptionsBtn?.setAttribute("aria-expanded", "false");
 };
 
-const toggleMoreMenu = (e) => {
+const toggleMoreMenu = (e, track = null) => {
   if (!moreMenu) return;
   e.stopPropagation();
   const isHidden = moreMenu.hidden;
+  const t = track || tracks[activeTrack];
+  
+  const menuAppleBtn = document.getElementById("menuApple");
+  if (menuAppleBtn && t) {
+     menuAppleBtn.innerHTML = t.source === 'audius' ? '<span aria-hidden="true">♫</span> Open on Audius' : '<span aria-hidden="true">♫</span> Open in Apple Music';
+  }
+  
+  if (track) {
+    currentMenuTrack = track;
+    e.currentTarget.parentElement.appendChild(moreMenu);
+    moreMenu.style.top = '100%';
+    moreMenu.style.right = '0';
+  } else {
+    currentMenuTrack = null;
+    const trackInfo = document.querySelector('.track-info');
+    if (trackInfo && moreMenu.parentElement !== trackInfo) {
+      trackInfo.appendChild(moreMenu);
+    }
+    moreMenu.style.top = '40px';
+    moreMenu.style.right = '18px';
+  }
+
   moreMenu.hidden = !isHidden;
-  moreOptionsBtn?.setAttribute("aria-expanded", String(isHidden));
+  if (!track) moreOptionsBtn?.setAttribute("aria-expanded", String(!isHidden));
 };
 
 moreOptionsBtn?.addEventListener("click", toggleMoreMenu);
 
 document.addEventListener("click", (e) => {
-  if (moreMenu && !moreMenu.hidden && !moreMenu.contains(e.target) && e.target !== moreOptionsBtn) {
+  if (moreMenu && !moreMenu.hidden && !moreMenu.contains(e.target) && !e.target.closest('.more-button') && !e.target.closest('.more-result') && !e.target.closest('.library-song-more')) {
     closeMoreMenu();
   }
 });
@@ -710,25 +1087,34 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && moreMenu && !moreMenu.hidden) {
     closeMoreMenu();
-    moreOptionsBtn?.focus();
+    if (!currentMenuTrack) moreOptionsBtn?.focus();
   }
 });
 
-
-menuPass?.addEventListener("click", () => { $("#passButton")?.click(); closeMoreMenu(); });
+menuPass?.addEventListener("click", () => {
+  if (currentMenuTrack) {
+    // For a card
+    recordTasteInteraction(currentMenuTrack, 'skip');
+    helperText.textContent = `Skipped ${currentMenuTrack.title}`;
+  } else {
+    // For main player
+    $("#passButton")?.click(); 
+  }
+  closeMoreMenu();
+});
 
 menuApple?.addEventListener("click", () => {
-  const track = tracks[activeTrack];
+  const track = currentMenuTrack || tracks[activeTrack];
   if (track && track.storeUrl) {
     window.open(track.storeUrl, "_blank");
   } else {
-    helperText.textContent = "Apple Music link not available for this track.";
+    helperText.textContent = "Link not available for this track.";
   }
   closeMoreMenu();
 });
 
 menuShare?.addEventListener("click", async () => {
-  const track = tracks[activeTrack];
+  const track = currentMenuTrack || tracks[activeTrack];
   if (!track) return;
   const shareUrl = track.storeUrl || window.location.href;
   try {
@@ -745,6 +1131,13 @@ menuShare?.addEventListener("click", async () => {
   } catch (err) {
     if (err.name !== "AbortError") console.error("Error sharing:", err);
   }
+  closeMoreMenu();
+});
+
+const menuAddQueue = $("#menuAddQueue");
+menuAddQueue?.addEventListener("click", () => {
+  const track = currentMenuTrack || tracks[activeTrack];
+  if (track) addToQueue(track);
   closeMoreMenu();
 });
 
@@ -814,6 +1207,9 @@ musicSearchForm.addEventListener("submit", async (event) => {
   currentSearchTerm = term;
   currentSearchOffset = 0;
   discoverSeenTrackIds.clear();
+  discoverSectionsCache = null;
+  const sectionsContainer = document.getElementById("discoverContextualSections");
+  if (sectionsContainer) sectionsContainer.innerHTML = "";
   discoverLoading = true;
   musicResults.innerHTML = '<p class="library-empty">Searching the music catalog…</p>';
   const result = await api(`/api/music/search?q=${encodeURIComponent(term)}&offset=${currentSearchOffset}`);
@@ -940,4 +1336,124 @@ if (resetTokenParam) {
   // remove token from URL
   window.history.replaceState({}, document.title, window.location.pathname);
   setTimeout(() => showDialog(resetDialog), 500);
+}
+
+// --- Queue & Up Next Logic ---
+function addToQueue(track) {
+  if (queue.some(t => t.id === track.id)) {
+    helperText.textContent = "Already in queue";
+    return;
+  }
+  queue.push({...track});
+  helperText.textContent = "Added to queue";
+  renderUpNextDialog();
+}
+
+function removeFromQueue(index) {
+  queue.splice(index, 1);
+  renderUpNextDialog();
+}
+
+function clearQueue() {
+  queue = [];
+  renderUpNextDialog();
+}
+
+const upNextDialog = $("#upNextDialog");
+const upNextList = $("#upNextList");
+
+$("#upNextBtn")?.addEventListener("click", () => {
+  renderUpNextDialog();
+  showDialog(upNextDialog);
+});
+
+$("#closeUpNext")?.addEventListener("click", () => upNextDialog.close());
+$("#clearQueueBtn")?.addEventListener("click", clearQueue);
+
+function renderUpNextDialog() {
+  if (!upNextList) return;
+  if (queue.length === 0) {
+    upNextList.innerHTML = '<p class="library-empty">No tracks in queue.</p>';
+    return;
+  }
+  upNextList.innerHTML = queue.map((track, i) => `
+    <div class="library-song queue-item">
+      ${track.artwork ? `<img src="${escapeHtml(track.artwork)}" alt="" class="library-song-art" />` : `<span class="library-song-art art-velvet" aria-hidden="true"></span>`}
+      <div class="library-song-info">
+        <div class="library-song-title">${escapeHtml(track.title)}</div>
+        <div class="library-song-artist">${escapeHtml(track.artist)}</div>
+      </div>
+      <button class="library-song-play queue-item-play" data-index="${i}" aria-label="Play ${escapeHtml(track.title)}"><span aria-hidden="true">▶</span></button>
+      <button class="library-song-remove queue-item-remove" data-index="${i}" aria-label="Remove ${escapeHtml(track.title)}">✕</button>
+    </div>
+  `).join("");
+
+  upNextList.querySelectorAll(".queue-item-play").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index, 10);
+      const track = queue[idx];
+      queue.splice(idx, 1);
+      selectTrackForHome(track);
+      if (track.previewUrl) {
+        mainAudio.src = track.previewUrl;
+        mainAudio.play().catch(() => {});
+        playing = true;
+        playButton.classList.add("playing");
+      }
+      renderUpNextDialog();
+      upNextDialog.close();
+    });
+  });
+
+  upNextList.querySelectorAll(".queue-item-remove").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const idx = parseInt(e.currentTarget.dataset.index, 10);
+      removeFromQueue(idx);
+    });
+  });
+}
+
+// --- Keyboard Controls ---
+document.addEventListener("keydown", (e) => {
+  // Ignore if typing in input/textarea
+  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+  const isInput = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement.isContentEditable;
+  
+  if (isInput) return;
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    playButton.click();
+  } else if (e.code === "ArrowRight") {
+    $("#nextButton").click();
+  } else if (e.code === "ArrowLeft") {
+    $("#backButton").click();
+  }
+});
+
+// --- Media Session API ---
+function updateMediaSession(track) {
+  if (!track || !('mediaSession' in navigator)) return;
+  
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: track.title || 'Unknown song',
+    artist: track.artist || 'Unknown artist',
+    album: track.album || '',
+    artwork: track.artwork ? [
+      { src: track.artwork, sizes: '512x512', type: 'image/jpeg' }
+    ] : []
+  });
+
+  navigator.mediaSession.setActionHandler('play', () => {
+    if (!playing) playButton.click();
+  });
+  navigator.mediaSession.setActionHandler('pause', () => {
+    if (playing) playButton.click();
+  });
+  navigator.mediaSession.setActionHandler('previoustrack', () => {
+    $("#backButton").click();
+  });
+  navigator.mediaSession.setActionHandler('nexttrack', () => {
+    $("#nextButton").click();
+  });
 }

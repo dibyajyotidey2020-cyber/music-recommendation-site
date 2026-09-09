@@ -96,6 +96,7 @@
               <button class="more-button" id="moreOptionsBtn" type="button" aria-label="More options for this song" aria-haspopup="menu" aria-expanded="false">•••</button>
               
               <div class="more-menu" id="moreMenu" role="menu" aria-label="More options" hidden>
+                <button class="menu-item" id="menuAddQueue" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">⊞</span> Add to Queue</button>
                 <button class="menu-item" id="menuShare" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">↗</span> Share</button>
                 <button class="menu-item" id="menuApple" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">♫</span> Open in Apple Music</button>
                 <div class="menu-divider"></div>
@@ -112,9 +113,21 @@
                 <span class="play-icon" aria-hidden="true"></span>
               </button>
               <button class="round-button small" id="nextButton" type="button" aria-label="Next track">↻</button>
+              <button class="round-button small queue-btn" id="upNextBtn" type="button" aria-label="Up Next">⊞</button>
             </div>
           </article>
           <audio id="mainAudio" preload="none" hidden></audio>
+
+          <dialog class="discover-dialog" id="upNextDialog" aria-label="Up Next">
+            <div class="discover-header">
+              <h2>UP NEXT</h2>
+              <button class="text-button" id="clearQueueBtn" type="button" style="margin-right: 16px;">Clear</button>
+              <button class="close-discover" id="closeUpNext" type="button" aria-label="Close up next">×</button>
+            </div>
+            <div class="discover-content">
+              <div id="upNextList"></div>
+            </div>
+          </dialog>
 
           <div class="reaction-row">
             <button class="reaction-button pass" id="passButton" type="button"><span aria-hidden="true">×</span> Not for me</button>
@@ -226,6 +239,7 @@
               <input id="musicSearchInput" type="search" placeholder="Search a song or artist" autocomplete="off" required />
               <button type="submit">Search</button>
             </form>
+            <div id="discoverContextualSections"></div>
             <div class="music-results" id="musicResults" aria-live="polite"><p class="library-empty">Search for a real song or artist to get started.</p></div>
             <audio id="previewAudio" controls preload="none" hidden></audio>
             <div class="discover-grid">
