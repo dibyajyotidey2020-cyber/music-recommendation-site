@@ -34,7 +34,6 @@ const saveButton = $("#saveButton");
 const moreOptionsBtn = $("#moreOptionsBtn");
 const moreMenu = $("#moreMenu");
 const menuShare = $("#menuShare");
-const menuApple = $("#menuApple");
 const menuPass = $("#menuPass");
 const profileButton = $(".profile-button");
 const authDialog = $("#authDialog");
@@ -795,15 +794,7 @@ function renderTrack() {
   saveButton.classList.toggle("saved", saved);
   saveButton.innerHTML = saved ? '<span aria-hidden="true">♥</span> Saved to library' : '<span aria-hidden="true">♡</span> Save for later';
   
-  if (menuApple) {
-    if (track.source === "audius") {
-      menuApple.textContent = "Open on Audius";
-      menuApple.style.display = track.storeUrl ? "" : "none";
-    } else {
-      menuApple.textContent = "Open in Apple Music";
-      menuApple.style.display = "";
-    }
-  }
+  if (lastTrackBtn) lastTrackBtn.style.display = window.tracks?.length > 1 ? "" : "none";
   
   renderTasteTracks();
 }
@@ -1052,11 +1043,6 @@ const toggleMoreMenu = (e, track = null) => {
   const isHidden = moreMenu.hidden;
   const t = track || tracks[activeTrack];
   
-  const menuAppleBtn = document.getElementById("menuApple");
-  if (menuAppleBtn && t) {
-     menuAppleBtn.innerHTML = t.source === 'audius' ? '<span aria-hidden="true">♫</span> Open on Audius' : '<span aria-hidden="true">♫</span> Open in Apple Music';
-  }
-  
   if (track) {
     currentMenuTrack = track;
     e.currentTarget.parentElement.appendChild(moreMenu);
@@ -1099,16 +1085,6 @@ menuPass?.addEventListener("click", () => {
   } else {
     // For main player
     $("#passButton")?.click(); 
-  }
-  closeMoreMenu();
-});
-
-menuApple?.addEventListener("click", () => {
-  const track = currentMenuTrack || tracks[activeTrack];
-  if (track && track.storeUrl) {
-    window.open(track.storeUrl, "_blank");
-  } else {
-    helperText.textContent = "Link not available for this track.";
   }
   closeMoreMenu();
 });
