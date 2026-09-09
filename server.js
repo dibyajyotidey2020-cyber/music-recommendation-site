@@ -7,6 +7,9 @@ const ROOT = __dirname;
 
 const moodSearchTerms = { Chill: "chill indie", Focus: "focus ambient", Energy: "upbeat pop", "Feel good": "feel good pop" };
 
+const AUDIUS_APP_NAME = "TVA_Taste_Variance_Algorithm";
+const AUDIUS_API_KEY = process.env.AUDIUS_API_KEY || ""; 
+
 function sendJson(res, status, payload, extraHeaders = {}) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -23,6 +26,81 @@ function formatDuration(milliseconds) {
   return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
 }
 
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 8000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(resource, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+}
+
+async function searchAudius(term, limit) {
+  try {
+    const endpoint = new URL("https://api.audius.co/v1/tracks/search");
+    endpoint.searchParams.set("query", term);
+    endpoint.searchParams.set("app_name", AUDIUS_APP_NAME);
+    const response = await fetchWithTimeout(endpoint, { timeout: 5000 });
+    if (!response.ok) return null;
+    const payload = await response.json();
+    if (!payload.data || payload.data.length === 0) return null;
+    
+    // Check streamable status
+    let validTracks = payload.data.filter(t => t.is_streamable !== false);
+    if (validTracks.length === 0) return null;
+    
+    return validTracks.slice(0, limit).map((track) => {
+      const art = track.artwork || {};
+      const artwork = art['480x480'] || art['150x150'] || art['1000x1000'] || track.cover_art?.['480x480'] || track.cover_art?.['150x150'] || null;
+      return {
+        id: `audius-${track.id}`,
+        title: track.title,
+        artist: track.user ? track.user.name : "Unknown Artist",
+        album: "Audius Release",
+        artwork: artwork,
+        previewUrl: `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=${AUDIUS_APP_NAME}`,
+        duration: track.duration * 1000,
+        length: formatDuration(track.duration * 1000),
+        storeUrl: track.permalink ? `https://audius.co${track.permalink}` : null,
+        genre: track.genre || "Electronic",
+        source: "audius"
+      };
+    });
+  } catch (err) {
+    return null;
+  }
+}
+
+async function searchITunes(term, limit) {
+  const endpoint = new URL("https://itunes.apple.com/search");
+  endpoint.searchParams.set("term", term);
+  endpoint.searchParams.set("media", "music");
+  endpoint.searchParams.set("entity", "song");
+  endpoint.searchParams.set("limit", String(limit));
+  const response = await fetchWithTimeout(endpoint, { timeout: 6000 });
+  if (!response.ok) throw new Error("Music catalog is temporarily unavailable");
+  const payload = await response.json();
+  if (!payload.results || payload.results.length === 0) return [];
+  return payload.results.map((item) => ({ 
+    id: String(item.trackId), 
+    title: item.trackName, 
+    artist: item.artistName, 
+    album: item.collectionName, 
+    artwork: item.artworkUrl100, 
+    previewUrl: item.previewUrl || null, 
+    duration: item.trackTimeMillis || null, 
+    length: formatDuration(item.trackTimeMillis), 
+    storeUrl: item.trackViewUrl, 
+    genre: item.primaryGenreName, 
+    source: "itunes" 
+  }));
+}
+
 async function handleApi(req, res, url) {
   if (req.method === "OPTIONS") return sendJson(res, 204, {});
 
@@ -34,32 +112,33 @@ async function handleApi(req, res, url) {
     const term = (url.searchParams.get("q") || "").trim().slice(0, 80);
     if (term.length < 2) return sendJson(res, 400, { error: "Enter at least two characters to search" });
     try {
-      const endpoint = new URL("https://itunes.apple.com/search");
-      endpoint.searchParams.set("term", term);
-      endpoint.searchParams.set("media", "music");
-      endpoint.searchParams.set("entity", "song");
-      endpoint.searchParams.set("limit", "12");
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error("Music catalog is temporarily unavailable");
-      const payload = await response.json();
-      const results = (payload.results || []).map((item) => ({ id: String(item.trackId), title: item.trackName, artist: item.artistName, album: item.collectionName, artwork: item.artworkUrl100, previewUrl: item.previewUrl || null, duration: item.trackTimeMillis || null, length: formatDuration(item.trackTimeMillis), storeUrl: item.trackViewUrl, genre: item.primaryGenreName, source: "itunes" }));
-      return sendJson(res, 200, { query: term, results, attribution: "Music previews and artwork provided courtesy of iTunes" });
-    } catch (error) { return sendJson(res, 502, { error: error.message }); }
+      let results = await searchAudius(term, 12);
+      let attribution = "Music provided by Audius";
+      
+      if (!results || results.length === 0) {
+        results = await searchITunes(term, 12);
+        attribution = "Music previews provided courtesy of iTunes";
+      }
+      return sendJson(res, 200, { query: term, results, attribution });
+    } catch (error) { 
+      return sendJson(res, 502, { error: error.message }); 
+    }
   }
 
   if (req.method === "GET" && url.pathname === "/api/music/featured") {
     const term = moodSearchTerms[url.searchParams.get("mood")] || moodSearchTerms.Chill;
-    const endpoint = new URL("https://itunes.apple.com/search");
-    endpoint.searchParams.set("term", term);
-    endpoint.searchParams.set("media", "music");
-    endpoint.searchParams.set("entity", "song");
-    endpoint.searchParams.set("limit", "6");
     try {
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error("Music catalog is temporarily unavailable");
-      const payload = await response.json();
-      return sendJson(res, 200, { results: (payload.results || []).map((item) => ({ id: String(item.trackId), title: item.trackName, artist: item.artistName, album: item.collectionName, artwork: item.artworkUrl100, previewUrl: item.previewUrl || null, duration: item.trackTimeMillis || null, length: formatDuration(item.trackTimeMillis), storeUrl: item.trackViewUrl, genre: item.primaryGenreName, source: "itunes" })) });
-    } catch (error) { return sendJson(res, 502, { error: error.message }); }
+      let results = await searchAudius(term, 6);
+      let attribution = "Music provided by Audius";
+      
+      if (!results || results.length === 0) {
+        results = await searchITunes(term, 6);
+        attribution = "Music previews provided courtesy of iTunes";
+      }
+      return sendJson(res, 200, { results, attribution });
+    } catch (error) { 
+      return sendJson(res, 502, { error: error.message }); 
+    }
   }
 
   // All other API routes removed for Demo architecture

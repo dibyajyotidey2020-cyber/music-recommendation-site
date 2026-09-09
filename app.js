@@ -294,13 +294,13 @@ function renderMusicResults(results, attribution = "") {
     result.querySelector(".music-result-artist").textContent = `${track.artist || "Unknown artist"}${track.album ? ` · ${track.album}` : ""}`;
     result.querySelector(".preview-result").addEventListener("click", async () => {
       selectTrackForHome(track);
-      if (!track.previewUrl) { helperText.textContent = "A preview is not available for this song."; return; }
+      if (!track.previewUrl) { helperText.textContent = track.source === 'audius' ? "This track is not streamable." : "A preview is not available for this song."; return; }
       mainAudio.src = track.previewUrl;
       await mainAudio.play().catch(() => {});
       playing = true;
       playButton.classList.add("playing");
       playButton.setAttribute("aria-label", `Pause ${track.title}`);
-      helperText.textContent = `Playing a preview of ${track.title} in your home player.`;
+      helperText.textContent = track.source === 'audius' ? `Playing full track: ${track.title} in your home player.` : `Playing a preview of ${track.title} in your home player.`;
     });
     result.querySelector(".save-result").addEventListener("click", async (event) => {
       const button = event.currentTarget;
@@ -571,7 +571,7 @@ document.querySelectorAll(".mood-chip").forEach((chip) => {
 playButton.addEventListener("click", () => {
   const track = tracks[activeTrack];
   if (!track.previewUrl) {
-    helperText.textContent = "This catalog entry has no playable preview. Full playback requires a connected music service.";
+    helperText.textContent = track.source === 'audius' ? "This track is not streamable." : "This catalog entry has no playable preview. Full playback requires a connected music service.";
     return;
   }
   playing = !playing;
@@ -581,14 +581,14 @@ playButton.addEventListener("click", () => {
     if (mainAudio.src !== track.previewUrl) mainAudio.src = track.previewUrl;
     mainAudio.play().catch(() => {});
   } else mainAudio.pause();
-  helperText.textContent = playing ? `Playing a preview of ${track.title}.` : "Preview paused.";
+  helperText.textContent = playing ? (track.source === 'audius' ? `Playing full track: ${track.title}.` : `Playing a preview of ${track.title}.`) : (track.source === 'audius' ? "Track paused." : "Preview paused.");
 });
 
 mainAudio.addEventListener("ended", () => {
   playing = false;
   playButton.classList.remove("playing");
   playButton.setAttribute("aria-label", `Play ${tracks[activeTrack]?.title || "song"}`);
-  helperText.textContent = "Preview ended. Full playback requires a connected music service.";
+  helperText.textContent = tracks[activeTrack]?.source === 'audius' ? "Track ended." : "Preview ended. Full playback requires a connected music service.";
 });
 mainAudio.addEventListener("loadedmetadata", syncProgress);
 mainAudio.addEventListener("timeupdate", syncProgress);
