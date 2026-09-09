@@ -73,103 +73,65 @@
         </section>
 
         <section class="for-you" aria-labelledby="for-you-title">
-          <div class="section-heading" id="normalPlayerHeading">
+          <div class="section-heading">
             <div>
               <p class="eyebrow">MADE FOR YOU</p>
               <h2 id="for-you-title">Your next favourite</h2>
               <p class="match-note">Match score = mood + taste fit</p>
             </div>
+            <span class="match" id="matchText">98% match</span>
           </div>
 
-          <!-- Mini Player (visible when navigating away or minimized) -->
-          <button class="mini-player" id="miniPlayer" type="button" aria-label="Expand player" hidden>
-            <div class="mini-art-container" id="miniAlbumArt"></div>
-            <div class="mini-info">
-              <span class="mini-title" id="miniTrackTitle">Title</span>
-              <span class="mini-artist" id="miniTrackArtist">Artist</span>
-            </div>
-            <div class="mini-controls" aria-label="Mini player controls">
-              <button class="play-button small" id="miniPlayButton" type="button" aria-label="Play/Pause">
-                <span class="play-icon" aria-hidden="true"></span>
-              </button>
-            </div>
-          </button>
-
-          <!-- Immersive Player (Normal & Expanded states) -->
           <article class="track-card" id="trackCard">
-            <div class="immersive-bg" id="immersiveBg" aria-hidden="true"></div>
-            
-            <div class="player-top-bar">
-              <button class="round-button secondary minimize-btn" id="minimizeBtn" type="button" aria-label="Minimize player">⏷</button>
-              <span class="player-context"></span>
-              <button class="more-button" id="moreOptionsBtn" type="button" aria-label="More options" aria-haspopup="menu" aria-expanded="false">⋮</button>
+            <div class="album-art art-velvet" id="albumArt" aria-hidden="true">
+              <span class="orb orb-one"></span><span class="orb orb-two"></span><span class="spark spark-one"></span><span class="spark spark-two"></span>
+            <span class="art-label" id="artLabel">CHOOSE<br />A MOOD</span>
             </div>
-
-            <div class="more-menu" id="moreMenu" role="menu" aria-label="More options" hidden>
-              <button class="menu-item" id="menuAddQueue" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">⊞</span> Add to Queue</button>
-              <button class="menu-item" id="menuShare" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">↗</span> Share</button>
-              <div class="menu-divider"></div>
-              <button class="menu-item menu-item-danger" id="menuPass" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">×</span> Not for me</button>
-            </div>
-
-            <div class="player-header-info">
-              <div class="info-group">
+            <div class="track-info">
+              <div>
                 <p class="track-kicker" id="trackTag">YOUR MIX STARTS HERE</p>
                 <h3 id="trackTitle">Choose a mood</h3>
                 <p id="trackArtist">Start by choosing Chill, Focus, Energy, or Feel good</p>
               </div>
-              <button class="reaction-button save" id="saveButton" type="button" aria-label="Save for later"><span aria-hidden="true">♡</span></button>
-            </div>
-
-            <div class="album-art-container">
-              <svg class="match-ring" viewBox="0 0 100 100" aria-hidden="true">
-                <circle class="ring-track" cx="50" cy="50" r="48"></circle>
-                <circle class="ring-progress" id="matchRing" cx="50" cy="50" r="48" stroke-dasharray="301.59" stroke-dashoffset="301.59"></circle>
-              </svg>
-              <div class="album-art art-velvet" id="albumArt" aria-hidden="true">
-                <span class="orb orb-one"></span><span class="orb orb-two"></span><span class="spark spark-one"></span><span class="spark spark-two"></span>
-                <span class="art-label" id="artLabel">CHOOSE<br />A MOOD</span>
+              <button class="more-button" id="moreOptionsBtn" type="button" aria-label="More options for this song" aria-haspopup="menu" aria-expanded="false">•••</button>
+              
+              <div class="more-menu" id="moreMenu" role="menu" aria-label="More options" hidden>
+                <button class="menu-item" id="menuAddQueue" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">⊞</span> Add to Queue</button>
+                <button class="menu-item" id="menuShare" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">↗</span> Share</button>
+                <div class="menu-divider"></div>
+                <button class="menu-item menu-item-danger" id="menuPass" type="button" role="menuitem" tabindex="-1"><span aria-hidden="true">×</span> Not for me</button>
               </div>
             </div>
-
-            <div class="match-group">
-              <span class="match" id="matchText">98% TVA MATCH</span>
-              <p class="match-reason" id="matchReason">Matches your mood and taste</p>
+            <div class="progress-wrap" aria-label="Preview progress">
+              <input class="progress-range" id="progressControl" type="range" min="0" max="1" step="0.1" value="0" aria-label="Song progress" disabled />
+              <div class="time-row"><span id="currentTime">0:00</span><span id="trackLength">—</span></div>
             </div>
-
-            <div class="player-bottom-area">
-              <div class="progress-wrap" aria-label="Preview progress">
-                <input class="progress-range" id="progressControl" type="range" min="0" max="1" step="0.01" value="0" aria-label="Song progress" disabled />
-                <div class="time-row"><span id="currentTime">0:00</span><span id="trackLength">—</span></div>
-              </div>
-
-              <div class="play-row immersive-controls">
-                <button class="round-button tertiary" id="shuffleBtn" type="button" aria-label="Shuffle" disabled>🔀</button>
-                <button class="round-button secondary" id="backButton" type="button" aria-label="Previous track">⏮</button>
-                <button class="play-button primary" id="playButton" type="button" aria-label="Play selected song">
-                  <span class="play-icon" aria-hidden="true"></span>
-                </button>
-                <button class="round-button secondary" id="nextButton" type="button" aria-label="Next track">⏭</button>
-                <button class="round-button tertiary queue-btn" id="upNextBtn" type="button" aria-label="Up Next">⊞</button>
-              </div>
-              <button class="reaction-button pass sr-only" id="passButton" type="button"><span aria-hidden="true">×</span> Not for me</button>
+            <div class="play-row">
+              <button class="round-button small" id="backButton" type="button" aria-label="Previous track">↺</button>
+              <button class="play-button" id="playButton" type="button" aria-label="Play selected song">
+                <span class="play-icon" aria-hidden="true"></span>
+              </button>
+              <button class="round-button small" id="nextButton" type="button" aria-label="Next track">↻</button>
+              <button class="round-button small queue-btn" id="upNextBtn" type="button" aria-label="Up Next">⊞</button>
             </div>
           </article>
-          
           <audio id="mainAudio" preload="none" hidden></audio>
 
-          <!-- Up Next Modal (slides up within player) -->
-          <div class="up-next-panel" id="upNextDialog" aria-label="Up Next" hidden>
+          <dialog class="discover-dialog" id="upNextDialog" aria-label="Up Next">
             <div class="discover-header">
               <h2>UP NEXT</h2>
               <button class="text-button" id="clearQueueBtn" type="button" style="margin-right: 16px;">Clear</button>
-              <button class="close-discover" id="closeUpNext" type="button" aria-label="Close up next">⏷</button>
+              <button class="close-discover" id="closeUpNext" type="button" aria-label="Close up next">×</button>
             </div>
             <div class="discover-content">
               <div id="upNextList"></div>
             </div>
-          </div>
+          </dialog>
 
+          <div class="reaction-row">
+            <button class="reaction-button pass" id="passButton" type="button"><span aria-hidden="true">×</span> Not for me</button>
+            <button class="reaction-button save" id="saveButton" type="button"><span aria-hidden="true">♡</span> Save for later</button>
+          </div>
           <p class="helper-text" id="helperText" aria-live="polite">Choose a mood to start your recommendations.</p>
         </section>
 

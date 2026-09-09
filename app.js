@@ -39,19 +39,6 @@ const profileButton = $(".profile-button");
 const authDialog = $("#authDialog");
 const authForm = $("#authForm");
 const authStatus = $("#authStatus");
-const forgotDialog = $("#forgotDialog");
-const resetDialog = $("#resetDialog");
-
-// Player States
-const playerSection = $("#playerSection");
-const miniPlayer = $("#miniPlayer");
-const minimizeBtn = $("#minimizeBtn");
-const miniTrackTitle = $("#miniTrackTitle");
-const miniTrackArtist = $("#miniTrackArtist");
-const miniAlbumArt = $("#miniAlbumArt");
-const miniPlayButton = $("#miniPlayButton");
-const immersiveBg = $("#immersiveBg");
-const matchRing = $("#matchRing");
 const authTitle = $("#authTitle");
 const authSubtitle = $("#authSubtitle");
 const authSubmit = $("#authSubmit");
@@ -62,10 +49,12 @@ const signupTab = $("#signupTab");
 const signedIn = $("#signedIn");
 const logoutButton = $("#logoutButton");
 const forgotPasswordBtn = $("#forgotPasswordBtn");
+const forgotDialog = $("#forgotDialog");
 const forgotForm = $("#forgotForm");
 const forgotStatus = $("#forgotStatus");
 const closeForgot = $("#closeForgot");
 const backToLoginBtn = $("#backToLoginBtn");
+const resetDialog = $("#resetDialog");
 const resetForm = $("#resetForm");
 const resetStatus = $("#resetStatus");
 const backToLoginFromResetBtn = $("#backToLoginFromResetBtn");
@@ -239,13 +228,15 @@ async function openLibrary() {
   const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
   let tracks = JSON.parse(localStorage.getItem(libraryKey)) || [];
   
+  // Sort newest first
   tracks.sort((a, b) => {
     if (a.savedAt && b.savedAt) return new Date(b.savedAt) - new Date(a.savedAt);
     if (a.savedAt) return -1;
     if (b.savedAt) return 1;
-    return 0;
+    return 0; // Legacy tracks without savedAt keep their order (which was append order)
   });
   
+  // Get active filter
   const filterVal = window.currentLibraryFilter || 'all';
   const filteredTracks = tracks.filter(t => {
     if (filterVal === 'audius') return t.source === 'audius';
@@ -282,6 +273,7 @@ async function openLibrary() {
     `).join("");
   }
   
+  // Bind filter buttons
   libraryList.querySelectorAll(".filter-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       window.currentLibraryFilter = e.target.dataset.filter;
@@ -299,11 +291,12 @@ async function openLibrary() {
         mainAudio.src = track.previewUrl;
         const t = {...track, isSaved: true};
         activeTrack = 0;
-        window.tracks = [t];
+        window.tracks = [t]; // Make it the active track array context
         renderTrack(t);
         try {
           await mainAudio.play();
-          updatePlayIcon(true);
+          updatePlayButton && updatePlayButton(true);
+          playButton.classList.add("playing");
         } catch (err) {}
         libraryDialog.close();
       });
@@ -312,17 +305,19 @@ async function openLibrary() {
         lib = lib.filter(t => t.id !== track.id);
         localStorage.setItem(libraryKey, JSON.stringify(lib));
         
+        // Update UI if the deleted track is currently playing
         if (window.tracks && window.tracks[activeTrack] && window.tracks[activeTrack].id === track.id) {
            window.tracks[activeTrack].isSaved = false;
            saveButton.classList.toggle("saved", false);
            saveButton.innerHTML = '<span aria-hidden="true">♡</span> Save for later';
         }
-        openLibrary();
+        openLibrary(); // Re-render
       });
       el.querySelector(".library-song-more")?.addEventListener("click", (e) => toggleMoreMenu(e, track));
     });
   }
 }
+// openLibrary implementation moved up
 
 let discoverSectionsCache = null;
 
@@ -340,6 +335,7 @@ async function buildDiscoverSections() {
   const maxTracksPerSection = 8;
   const excludeIds = new Set(discoverSeenTrackIds);
   
+  // 1. Because You Saved [Genre]
   const savedGenres = {};
   library.forEach(t => {
     if (t.genre) {
@@ -370,6 +366,7 @@ async function buildDiscoverSections() {
     }
   }
 
+  // 2. Fresh Discoveries
   const interactionsCount = tasteProfile.totalInteractions || 0;
   const hasRecentSave = library.some(t => {
     if (!t.savedAt) return false;
@@ -399,6 +396,7 @@ async function buildDiscoverSections() {
     }
   }
 
+  // 3. Explore Something Different
   if (interactionsCount >= 10 && typeof calculateTasteDrift === 'function') {
     const drift = calculateTasteDrift();
     if (drift && drift.isDrifting && drift.driftPercentage >= 20 && drift.topRecentGenres.length > 0) {
@@ -454,7 +452,8 @@ function renderContextualSections(sections) {
         mainAudio.src = track.previewUrl;
         await mainAudio.play().catch(() => {});
         playing = true;
-        updatePlayIcon(true);
+        playButton.classList.add("playing");
+        playButton.setAttribute("aria-label", `Pause ${track.title}`);
         helperText.textContent = track.source === 'audius' ? `Playing full track: ${track.title} in your home player.` : `Playing a preview of ${track.title} in your home player.`;
       });
       result.querySelector(".save-result").addEventListener("click", async (event) => {
@@ -535,7 +534,8 @@ function renderMusicResults(results, attribution = "", append = false, skipClear
       mainAudio.src = track.previewUrl;
       await mainAudio.play().catch(() => {});
       playing = true;
-      updatePlayIcon(true);
+      playButton.classList.add("playing");
+      playButton.setAttribute("aria-label", `Pause ${track.title}`);
       helperText.textContent = track.source === 'audius' ? `Playing full track: ${track.title} in your home player.` : `Playing a preview of ${track.title} in your home player.`;
     });
     result.querySelector(".save-result").addEventListener("click", async (event) => {
@@ -591,7 +591,7 @@ async function loadFeaturedMusic() {
   const requestId = ++musicRequestId;
   
   if (!discoverSectionsCache) {
-    discoverSeenTrackIds.clear();
+    discoverSeenTrackIds.clear(); // Reset before building sections
     discoverSectionsCache = await buildDiscoverSections();
   }
   if (requestId === musicRequestId) {
@@ -657,7 +657,7 @@ function renderProductionList() {
         mainAudio.src = track.previewUrl;
         mainAudio.play().catch(() => {});
         playing = true;
-        updatePlayIcon(true);
+        playButton.classList.add("playing");
       }
       helperText.textContent = `${track.title} by ${track.artist} is now playing in your home player.`;
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -676,7 +676,7 @@ function selectTrackForHome(track) {
   if (!track) return;
   mainAudio.pause();
   playing = false;
-  updatePlayIcon(false);
+  playButton.classList.remove("playing");
   const selected = normalizeMusicTrack(track);
   tracks = [selected, ...tracks.filter((item) => item.id !== selected.id)];
   activeTrack = 0;
@@ -784,12 +784,7 @@ function renderTrack() {
   progressControl.disabled = !track.previewUrl;
   progressControl.style.setProperty("--progress", "0%");
   currentTime.textContent = "0:00";
-  
-  // Sync to mini player
-  if (miniTrackTitle) miniTrackTitle.textContent = track.title;
-  if (miniTrackArtist) miniTrackArtist.textContent = track.artist;
-  if (miniAlbumArt) miniAlbumArt.innerHTML = track.artwork ? `<img src="${escapeHtml(track.artwork)}" alt="" />` : '<span class="art-velvet" aria-hidden="true"></span>';
-  if (immersiveBg) immersiveBg.style.backgroundImage = track.artwork ? `url('${escapeHtml(track.artwork)}')` : "";
+  playButton.setAttribute("aria-label", `${playing ? "Pause" : "Play"} ${track.title}`);
   
   const user = JSON.parse(localStorage.getItem('tva_demo_user'));
   const libraryKey = user && user.userId ? `tva_library_${user.userId}` : 'tva_library';
@@ -799,8 +794,9 @@ function renderTrack() {
   saveButton.classList.toggle("saved", saved);
   saveButton.innerHTML = saved ? '<span aria-hidden="true">♥</span> Saved to library' : '<span aria-hidden="true">♡</span> Save for later';
   
+  if (lastTrackBtn) lastTrackBtn.style.display = window.tracks?.length > 1 ? "" : "none";
+  
   renderTasteTracks();
-  updatePlayIcon(playing);
 }
 
 function formatTime(seconds) {
@@ -818,53 +814,6 @@ function syncProgress() {
   currentTime.textContent = formatTime(value);
   if (duration) trackLength.textContent = formatTime(duration);
 }
-
-// Expand / Minimize Player Logic
-miniPlayer?.addEventListener("click", (e) => {
-  if (e.target.closest('#miniPlayButton')) return;
-  playerSection.classList.add("is-expanded");
-  miniPlayer.hidden = true;
-});
-
-minimizeBtn?.addEventListener("click", () => {
-  playerSection.classList.remove("is-expanded");
-  miniPlayer.hidden = false;
-});
-
-miniPlayButton?.addEventListener("click", (e) => {
-  e.stopPropagation();
-  togglePlay();
-});
-
-function togglePlay() {
-  const track = tracks[activeTrack];
-  if (!track || !track.previewUrl) return;
-  playing = !playing;
-  if (playing) {
-    if (mainAudio.src !== track.previewUrl) mainAudio.src = track.previewUrl;
-    mainAudio.play().catch(() => {});
-  } else mainAudio.pause();
-  updatePlayIcon(playing);
-  helperText.textContent = playing ? (track.source === 'audius' ? `Playing full track: ${track.title}.` : `Playing a preview of ${track.title}.`) : (track.source === 'audius' ? "Track paused." : "Preview paused.");
-}
-
-const updatePlayIcon = (isPlaying) => {
-  if (playButton) {
-    playButton.innerHTML = isPlaying ? '<span class="pause-icon" aria-hidden="true"></span>' : '<span class="play-icon" aria-hidden="true"></span>';
-    playButton.setAttribute("aria-label", isPlaying ? "Pause selected song" : "Play selected song");
-  }
-  if (miniPlayButton) {
-    miniPlayButton.innerHTML = isPlaying ? '<span class="pause-icon" aria-hidden="true"></span>' : '<span class="play-icon" aria-hidden="true"></span>';
-    miniPlayButton.setAttribute("aria-label", isPlaying ? "Pause selected song" : "Play selected song");
-  }
-  if (matchRing) {
-    if (isPlaying) {
-      matchRing.classList.add("is-playing");
-    } else {
-      matchRing.classList.remove("is-playing");
-    }
-  }
-};
 
 function renderTasteTracks() {
   const sourceTracks = lastMusicResults.length ? lastMusicResults : tracks;
@@ -903,6 +852,7 @@ function moveTrack(direction, message) {
   activeTrack = (activeTrack + direction + tracks.length) % tracks.length;
   playing = false;
   mainAudio.pause();
+  playButton.classList.remove("playing");
   renderTrack();
   helperText.textContent = message || `A new ${selectedMood ? selectedMood.toLowerCase() : "mood"} pick is ready for you.`;
 }
@@ -930,7 +880,7 @@ document.querySelectorAll(".mood-chip").forEach((chip) => {
   chip.addEventListener("click", async () => {
     mainAudio.pause();
     playing = false;
-    updatePlayIcon(false);
+    playButton.classList.remove("playing");
     document.querySelector(".mood-chip.active")?.classList.remove("active");
     chip.classList.add("active");
     selectedMood = chip.dataset.mood;
@@ -943,11 +893,26 @@ document.querySelectorAll(".mood-chip").forEach((chip) => {
   });
 });
 
-playButton.addEventListener("click", togglePlay);
+playButton.addEventListener("click", () => {
+  const track = tracks[activeTrack];
+  if (!track.previewUrl) {
+    helperText.textContent = track.source === 'audius' ? "This track is not streamable." : "This catalog entry has no playable preview. Full playback requires a connected music service.";
+    return;
+  }
+  playing = !playing;
+  playButton.classList.toggle("playing", playing);
+  playButton.setAttribute("aria-label", `${playing ? "Pause" : "Play"} ${track.title}`);
+  if (playing) {
+    if (mainAudio.src !== track.previewUrl) mainAudio.src = track.previewUrl;
+    mainAudio.play().catch(() => {});
+  } else mainAudio.pause();
+  helperText.textContent = playing ? (track.source === 'audius' ? `Playing full track: ${track.title}.` : `Playing a preview of ${track.title}.`) : (track.source === 'audius' ? "Track paused." : "Preview paused.");
+});
 
 mainAudio.addEventListener("ended", () => {
   playing = false;
-  updatePlayIcon(false);
+  playButton.classList.remove("playing");
+  playButton.setAttribute("aria-label", `Play ${tracks[activeTrack]?.title || "song"}`);
   currentPlayedTrackId = null;
 
   if (queue.length > 0) {
@@ -961,12 +926,12 @@ mainAudio.addEventListener("ended", () => {
         helperText.textContent = "Autoplay blocked. Press play to start.";
       });
       playing = true;
-      updatePlayIcon(true);
+      playButton.classList.add("playing");
     }
   }
 });
 mainAudio.addEventListener("playing", () => {
-  const active = tracks[activeTrack];
+  const active = tracks[activeTrack] || (window.tracks && window.tracks[0]);
   if (active && active.id !== currentPlayedTrackId) {
     currentPlayedTrackId = active.id;
     recordTasteInteraction(active, 'play');
@@ -974,8 +939,12 @@ mainAudio.addEventListener("playing", () => {
   helperText.textContent = (active && active.source === 'audius') ? "Playing full track..." : "Playing a preview...";
   updateMediaSession(active);
 });
-mainAudio.addEventListener("waiting", () => { helperText.textContent = "Buffering..."; });
-mainAudio.addEventListener("stalled", () => { helperText.textContent = "Network issue, retrying..."; });
+mainAudio.addEventListener("waiting", () => {
+  helperText.textContent = "Buffering...";
+});
+mainAudio.addEventListener("stalled", () => {
+  helperText.textContent = "Network issue, retrying...";
+});
 mainAudio.addEventListener("canplay", () => {
   if (helperText.textContent === "Buffering..." || helperText.textContent === "Network issue, retrying...") {
     const active = tracks[activeTrack];
@@ -999,7 +968,8 @@ function playNextQueuedTrack() {
       helperText.textContent = "Playback blocked by browser. Press play to start.";
     });
     playing = true;
-    updatePlayIcon(true);
+    playButton.classList.add("playing");
+    playButton.setAttribute("aria-label", `Pause ${nextTrack.title}`);
   }
   renderUpNextDialog();
   return true;
@@ -1058,7 +1028,8 @@ saveButton.addEventListener("click", async () => {
   }
 });
 
-let currentMenuTrack = null; 
+// More Options Menu Logic
+let currentMenuTrack = null; // null means activeTrack
 
 const closeMoreMenu = () => {
   if (!moreMenu) return;
@@ -1070,6 +1041,7 @@ const toggleMoreMenu = (e, track = null) => {
   if (!moreMenu) return;
   e.stopPropagation();
   const isHidden = moreMenu.hidden;
+  const t = track || tracks[activeTrack];
   
   if (track) {
     currentMenuTrack = track;
@@ -1107,9 +1079,11 @@ document.addEventListener("keydown", (e) => {
 
 menuPass?.addEventListener("click", () => {
   if (currentMenuTrack) {
+    // For a card
     recordTasteInteraction(currentMenuTrack, 'skip');
     helperText.textContent = `Skipped ${currentMenuTrack.title}`;
   } else {
+    // For main player
     $("#passButton")?.click(); 
   }
   closeMoreMenu();
@@ -1152,7 +1126,7 @@ document.querySelectorAll(".mini-track").forEach((track) => {
       mainAudio.src = selected.previewUrl;
       mainAudio.play().catch(() => {});
       playing = true;
-      updatePlayIcon(true);
+      playButton.classList.add("playing");
     }
     helperText.textContent = `${selected.title} is now playing in your home player.`;
   });
@@ -1256,6 +1230,7 @@ logoutButton.addEventListener("click", () => {
   localStorage.removeItem("tva_demo_user");
   updateAuthView(null);
   try { authDialog.close(); } catch(e) {}
+  // Call openLibrary if it's currently open to close it
   try { libraryDialog.close(); } catch(e) {}
 });
 
@@ -1329,14 +1304,17 @@ resetForm?.addEventListener("submit", async (event) => {
   }
 });
 
+// Check for reset token in URL on load
 const urlParams = new URLSearchParams(window.location.search);
 const resetTokenParam = urlParams.get("reset");
 if (resetTokenParam) {
   currentResetToken = resetTokenParam;
+  // remove token from URL
   window.history.replaceState({}, document.title, window.location.pathname);
   setTimeout(() => showDialog(resetDialog), 500);
 }
 
+// --- Queue & Up Next Logic ---
 function addToQueue(track) {
   if (queue.some(t => t.id === track.id)) {
     helperText.textContent = "Already in queue";
@@ -1362,10 +1340,10 @@ const upNextList = $("#upNextList");
 
 $("#upNextBtn")?.addEventListener("click", () => {
   renderUpNextDialog();
-  upNextDialog.hidden = false;
+  showDialog(upNextDialog);
 });
 
-$("#closeUpNext")?.addEventListener("click", () => upNextDialog.hidden = true);
+$("#closeUpNext")?.addEventListener("click", () => upNextDialog.close());
 $("#clearQueueBtn")?.addEventListener("click", clearQueue);
 
 function renderUpNextDialog() {
@@ -1399,7 +1377,7 @@ function renderUpNextDialog() {
         playButton.classList.add("playing");
       }
       renderUpNextDialog();
-      upNextDialog.hidden = true;
+      upNextDialog.close();
     });
   });
 
