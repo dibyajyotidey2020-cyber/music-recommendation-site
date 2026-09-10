@@ -391,14 +391,62 @@ body[data-theme="dark"] .profile-details { background: rgba(255,255,255,0.03); }
 
 @media (min-width: 768px) {
   .app-shell { display: grid; min-height: 100vh; place-items: center; padding: 38px; background: radial-gradient(circle at 14% 15%, #e8e2ff, transparent 29%), radial-gradient(circle at 88% 78%, #f8d8e2, transparent 32%), #f3f1fb; }
-  .app { width: min(100%, 486px); min-height: 840px; border-radius: 30px; box-shadow: 0 25px 65px rgba(47, 34, 96, .17); padding-bottom: 105px; }
-  .album-art { height: 250px; }
+  .app { width: min(100%, 640px); min-height: 840px; border-radius: 30px; box-shadow: 0 25px 65px rgba(47, 34, 96, .17); padding-bottom: 105px; }
+  .album-art { height: 320px; }
   .bottom-nav { border-radius: 0 0 30px 30px; position: absolute; padding-bottom: 14px; }
 }
 
 @media (min-width: 1024px) {
-  .app { width: min(100%, 580px); padding-right: 31px; padding-left: 31px; }
-  .intro { padding-top: 38px; }
+  .app { 
+    width: min(100%, 1150px); 
+    padding: 40px 60px 0; 
+    min-height: auto;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    grid-template-areas:
+      "topbar topbar"
+      "intro taste"
+      "foryou taste"
+      "nav nav";
+    gap: 0 60px;
+  }
+  .topbar { grid-area: topbar; margin-bottom: 10px; }
+  .intro { grid-area: intro; padding: 0; align-self: start; }
+  .for-you { grid-area: foryou; padding: 20px 0 40px; }
+  .taste-section { grid-area: taste; padding: 0; }
+  .bottom-nav { 
+    grid-area: nav; 
+    position: relative; 
+    border-radius: 20px; 
+    border-top: none; 
+    background: transparent; 
+    backdrop-filter: none; 
+    justify-content: center; 
+    gap: 80px; 
+    padding: 30px 0; 
+  }
+  .nav-item { flex-direction: row; gap: 10px; font-size: 0.9rem; }
+  .nav-item span { font-size: 1.4rem; }
+
+  /* Track Card Desktop */
+  .track-card {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-areas:
+      "art info"
+      "art progress"
+      "art controls";
+    min-height: 280px;
+  }
+  .album-art { grid-area: art; height: 100%; border-radius: 0; }
+  .track-info { grid-area: info; padding: 30px 30px 10px; align-self: end; }
+  .progress-wrap { grid-area: progress; padding: 0 30px; }
+  .play-row { grid-area: controls; padding: 10px 30px 30px; justify-content: flex-start; gap: 25px; }
+
+  /* Dialogs & Lists */
+  .auth-dialog { width: min(calc(100vw - 48px), 600px); }
+  .discover-grid { grid-template-columns: repeat(3, 1fr); }
+  .library-list, .production-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 }
 
 @media (max-width: 600px) {
