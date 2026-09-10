@@ -5,6 +5,7 @@ let selectedMood = null;
 let userId;
 let musicRequestId = 0;
 let lastMusicResults = [];
+let queue = [];
 
 const DISCOVER_BATCH_SIZE = 20;
 let currentSearchTerm = "";
@@ -233,41 +234,50 @@ async function openLibrary() {
     if (a.savedAt && b.savedAt) return new Date(b.savedAt) - new Date(a.savedAt);
     if (a.savedAt) return -1;
     if (b.savedAt) return 1;
-    return 0; // Legacy tracks without savedAt keep their order (which was append order)
+    return 0;
   });
   
   // Get active filter
   const filterVal = window.currentLibraryFilter || 'all';
-  const filteredTracks = tracks.filter(t => {
-    if (filterVal === 'audius') return t.source === 'audius';
-    if (filterVal === 'itunes') return t.source === 'itunes';
-    return true;
-  });
+  let filteredTracks = [];
+  
+  if (filterVal === 'queue') {
+    filteredTracks = [...queue];
+  } else {
+    filteredTracks = tracks.filter(t => {
+      if (filterVal === 'audius') return t.source === 'audius';
+      if (filterVal === 'itunes') return t.source === 'itunes';
+      return true;
+    });
+  }
   
   const filterHtml = `
     <div class="library-filter">
       <button data-filter="all" class="filter-btn ${filterVal === 'all' ? 'selected' : ''}">All</button>
       <button data-filter="audius" class="filter-btn ${filterVal === 'audius' ? 'selected' : ''}">Audius</button>
       <button data-filter="itunes" class="filter-btn ${filterVal === 'itunes' ? 'selected' : ''}">iTunes</button>
+      <button data-filter="queue" class="filter-btn ${filterVal === 'queue' ? 'selected' : ''}">Queue</button>
     </div>
   `;
 
   if (filteredTracks.length === 0) {
     let emptyMsg = "Your library is empty. Save songs to see them here.";
-    if (tracks.length > 0) {
+    if (filterVal === 'queue') {
+      emptyMsg = "Your queue is empty. Add songs from the player to hear them next.";
+    } else if (tracks.length > 0) {
       emptyMsg = `No ${filterVal === 'audius' ? 'Audius' : 'iTunes'} tracks saved yet.`;
     }
     libraryList.innerHTML = filterHtml + `<p class="library-empty">${emptyMsg}</p>`;
   } else {
-    libraryList.innerHTML = filterHtml + filteredTracks.map(track => `
-      <div class="library-song">
-        <img src="${escapeHtml(track.artwork)}" alt="${escapeHtml(track.title)}" class="library-song-art" />
+    libraryList.innerHTML = filterHtml + filteredTracks.map((track, idx) => `
+      <div class="library-song" data-index="${idx}">
+        ${track.artwork ? `<img src="${escapeHtml(track.artwork)}" alt="${escapeHtml(track.title)}" class="library-song-art" />` : `<span class="library-song-art art-velvet" aria-hidden="true"></span>`}
         <div class="library-song-info">
           <div class="library-song-title">${escapeHtml(track.title)}</div>
           <div class="library-song-artist">${escapeHtml(track.artist)}</div>
         </div>
         <button class="library-song-play" aria-label="Play ${escapeHtml(track.title)}"><span aria-hidden="true">▶</span></button>
-        <button class="library-song-remove" aria-label="Remove ${escapeHtml(track.title)} from library">✕</button>
+        <button class="library-song-remove" aria-label="Remove ${escapeHtml(track.title)}">✕</button>
         <button class="library-song-more" aria-label="More options for ${escapeHtml(track.title)}">•••</button>
       </div>
     `).join("");
@@ -287,31 +297,52 @@ async function openLibrary() {
       const el = libraryElements[idx];
       if (!el) return;
       el.querySelector(".library-song-play").addEventListener("click", async () => {
-        mainAudio.pause();
-        mainAudio.src = track.previewUrl;
-        const t = {...track, isSaved: true};
-        activeTrack = 0;
-        window.tracks = [t]; // Make it the active track array context
-        renderTrack(t);
-        try {
-          await mainAudio.play();
-          updatePlayButton && updatePlayButton(true);
-          playButton.classList.add("playing");
-        } catch (err) {}
+        if (filterVal === 'queue') {
+          // Play from queue
+          const realIdx = queue.findIndex(t => t.id === track.id);
+          if (realIdx > -1) {
+            queue.splice(realIdx, 1);
+            selectTrackForHome(track);
+            if (track.previewUrl) {
+              mainAudio.src = track.previewUrl;
+              mainAudio.play().catch(() => {});
+              playing = true;
+            }
+            renderUpNextDialog();
+          }
+        } else {
+          mainAudio.pause();
+          mainAudio.src = track.previewUrl;
+          const t = {...track, isSaved: true};
+          activeTrack = 0;
+          window.tracks = [t]; // Make it the active track array context
+          renderTrack(t);
+          try {
+            await mainAudio.play();
+          } catch (err) {}
+        }
         libraryDialog.close();
       });
       el.querySelector(".library-song-remove").addEventListener("click", async () => {
-        let lib = JSON.parse(localStorage.getItem(libraryKey)) || [];
-        lib = lib.filter(t => t.id !== track.id);
-        localStorage.setItem(libraryKey, JSON.stringify(lib));
-        
-        // Update UI if the deleted track is currently playing
-        if (window.tracks && window.tracks[activeTrack] && window.tracks[activeTrack].id === track.id) {
-           window.tracks[activeTrack].isSaved = false;
-           saveButton.classList.toggle("saved", false);
-           saveButton.innerHTML = '<span aria-hidden="true">♡</span> Save for later';
+        if (filterVal === 'queue') {
+          const realIdx = queue.findIndex(t => t.id === track.id);
+          if (realIdx > -1) {
+            removeFromQueue(realIdx);
+            openLibrary(); // Re-render
+          }
+        } else {
+          let lib = JSON.parse(localStorage.getItem(libraryKey)) || [];
+          lib = lib.filter(t => t.id !== track.id);
+          localStorage.setItem(libraryKey, JSON.stringify(lib));
+          
+          // Update UI if the deleted track is currently playing
+          if (window.tracks && window.tracks[activeTrack] && window.tracks[activeTrack].id === track.id) {
+             window.tracks[activeTrack].isSaved = false;
+             saveButton.classList.toggle("saved", false);
+             saveButton.innerHTML = '<span aria-hidden="true">♡</span> Save for later';
+          }
+          openLibrary(); // Re-render
         }
-        openLibrary(); // Re-render
       });
       el.querySelector(".library-song-more")?.addEventListener("click", (e) => toggleMoreMenu(e, track));
     });
@@ -794,8 +825,6 @@ function renderTrack() {
   saveButton.classList.toggle("saved", saved);
   saveButton.innerHTML = saved ? '<span aria-hidden="true">♥</span> Saved to library' : '<span aria-hidden="true">♡</span> Save for later';
   
-  if (lastTrackBtn) lastTrackBtn.style.display = window.tracks?.length > 1 ? "" : "none";
-  
   renderTasteTracks();
 }
 
@@ -895,24 +924,34 @@ document.querySelectorAll(".mood-chip").forEach((chip) => {
 
 playButton.addEventListener("click", () => {
   const track = tracks[activeTrack];
-  if (!track.previewUrl) {
-    helperText.textContent = track.source === 'audius' ? "This track is not streamable." : "This catalog entry has no playable preview. Full playback requires a connected music service.";
+  if (!track || !track.previewUrl) {
+    helperText.textContent = track && track.source === 'audius' ? "This track is not streamable." : "This catalog entry has no playable preview. Full playback requires a connected music service.";
     return;
   }
-  playing = !playing;
-  playButton.classList.toggle("playing", playing);
-  playButton.setAttribute("aria-label", `${playing ? "Pause" : "Play"} ${track.title}`);
-  if (playing) {
+  if (mainAudio.paused) {
     if (mainAudio.src !== track.previewUrl) mainAudio.src = track.previewUrl;
     mainAudio.play().catch(() => {});
-  } else mainAudio.pause();
-  helperText.textContent = playing ? (track.source === 'audius' ? `Playing full track: ${track.title}.` : `Playing a preview of ${track.title}.`) : (track.source === 'audius' ? "Track paused." : "Preview paused.");
+  } else {
+    mainAudio.pause();
+  }
+});
+
+mainAudio.addEventListener("play", () => {
+  playing = true;
+  playButton.classList.add("playing");
+  const track = tracks[activeTrack];
+  if (track) playButton.setAttribute("aria-label", `Pause ${track.title}`);
+});
+
+mainAudio.addEventListener("pause", () => {
+  playing = false;
+  playButton.classList.remove("playing");
+  const track = tracks[activeTrack];
+  if (track) playButton.setAttribute("aria-label", `Play ${track.title}`);
+  helperText.textContent = track && track.source === 'audius' ? "Track paused." : "Preview paused.";
 });
 
 mainAudio.addEventListener("ended", () => {
-  playing = false;
-  playButton.classList.remove("playing");
-  playButton.setAttribute("aria-label", `Play ${tracks[activeTrack]?.title || "song"}`);
   currentPlayedTrackId = null;
 
   if (queue.length > 0) {
@@ -925,11 +964,10 @@ mainAudio.addEventListener("ended", () => {
       mainAudio.play().catch(() => {
         helperText.textContent = "Autoplay blocked. Press play to start.";
       });
-      playing = true;
-      playButton.classList.add("playing");
     }
   }
 });
+
 mainAudio.addEventListener("playing", () => {
   const active = tracks[activeTrack] || (window.tracks && window.tracks[0]);
   if (active && active.id !== currentPlayedTrackId) {
@@ -939,12 +977,15 @@ mainAudio.addEventListener("playing", () => {
   helperText.textContent = (active && active.source === 'audius') ? "Playing full track..." : "Playing a preview...";
   updateMediaSession(active);
 });
+
 mainAudio.addEventListener("waiting", () => {
   helperText.textContent = "Buffering...";
 });
+
 mainAudio.addEventListener("stalled", () => {
   helperText.textContent = "Network issue, retrying...";
 });
+
 mainAudio.addEventListener("canplay", () => {
   if (helperText.textContent === "Buffering..." || helperText.textContent === "Network issue, retrying...") {
     const active = tracks[activeTrack];
@@ -980,10 +1021,22 @@ $("#nextButton").addEventListener("click", () => {
     playNextQueuedTrack();
   } else {
     moveTrack(1);
+    const nt = tracks[activeTrack];
+    if (nt && nt.previewUrl) {
+      mainAudio.src = nt.previewUrl;
+      mainAudio.play().catch(() => {});
+    }
   }
 });
 
-$("#backButton").addEventListener("click", () => moveTrack(-1));
+$("#backButton").addEventListener("click", () => {
+  moveTrack(-1);
+  const nt = tracks[activeTrack];
+  if (nt && nt.previewUrl) {
+    mainAudio.src = nt.previewUrl;
+    mainAudio.play().catch(() => {});
+  }
+});
 $("#passButton").addEventListener("click", () => {
     if (tracks[activeTrack]) {
        let skips = JSON.parse(localStorage.getItem('tva_skips')) || [];
@@ -1114,6 +1167,34 @@ const menuAddQueue = $("#menuAddQueue");
 menuAddQueue?.addEventListener("click", () => {
   const track = currentMenuTrack || tracks[activeTrack];
   if (track) addToQueue(track);
+  closeMoreMenu();
+});
+
+const menuSaveTrack = $("#menuSaveTrack");
+menuSaveTrack?.addEventListener("click", async () => {
+  const track = currentMenuTrack || tracks[activeTrack];
+  if (!track) return;
+  if (!(await ensureAuthenticated())) return;
+  
+  const currentUser = JSON.parse(localStorage.getItem('tva_demo_user'));
+  const libKey = currentUser && currentUser.userId ? `tva_library_${currentUser.userId}` : 'tva_library';
+  let lib = JSON.parse(localStorage.getItem(libKey)) || [];
+  
+  if (!lib.some(t => t.id === track.id)) {
+    lib.push({...track, isSaved: true, savedAt: new Date().toISOString()});
+    recordTasteInteraction(track, 'save');
+    localStorage.setItem(libKey, JSON.stringify(lib));
+    helperText.textContent = `${track.title} was saved to your library.`;
+    
+    // Update main save button if the saved track is currently playing
+    if (tracks[activeTrack] && tracks[activeTrack].id === track.id) {
+       tracks[activeTrack].isSaved = true;
+       saveButton.classList.toggle("saved", true);
+       saveButton.innerHTML = '<span aria-hidden="true">♥</span> Saved to library';
+    }
+  } else {
+    helperText.textContent = `${track.title} is already in your library.`;
+  }
   closeMoreMenu();
 });
 
@@ -1394,16 +1475,32 @@ document.addEventListener("keydown", (e) => {
   // Ignore if typing in input/textarea
   const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
   const isInput = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement.isContentEditable;
+  const isButton = activeTag === 'button' || (document.activeElement && document.activeElement.getAttribute("role") === "button");
   
   if (isInput) return;
 
-  if (e.code === "Space") {
-    e.preventDefault();
-    playButton.click();
+  if (e.code === "Enter") {
+    if (document.body.classList.contains("welcome-active")) {
+      e.preventDefault();
+      enterButton?.click();
+    }
+  } else if (e.code === "Space") {
+    if (document.body.classList.contains("welcome-active")) {
+      e.preventDefault();
+      enterButton?.click();
+    } else if (!isButton) {
+      e.preventDefault();
+      playButton.click();
+    }
   } else if (e.code === "ArrowRight") {
     $("#nextButton").click();
   } else if (e.code === "ArrowLeft") {
     $("#backButton").click();
+  } else if (e.code === "Escape") {
+    if (moreMenu && !moreMenu.hidden) {
+      closeMoreMenu();
+      e.preventDefault();
+    }
   }
 });
 
@@ -1433,3 +1530,14 @@ function updateMediaSession(track) {
     $("#nextButton").click();
   });
 }
+
+// --- Desktop Click-Outside Modal Close ---
+document.querySelectorAll('dialog').forEach(dialog => {
+  dialog.addEventListener('click', (e) => {
+    if (window.innerWidth >= 1024) {
+      if (e.target === dialog) {
+        dialog.close();
+      }
+    }
+  });
+});
