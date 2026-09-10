@@ -169,7 +169,7 @@ button { cursor: pointer; }
   min-height: 100vh;
   overflow: hidden;
   background: var(--cream);
-  padding: 25px 20px 105px;
+  padding: 25px 20px calc(105px + env(safe-area-inset-bottom, 0px));
 }
 
 .topbar-actions { display: flex; align-items: center; gap: 8px; }
@@ -258,8 +258,8 @@ h2 { margin-bottom: 0; font-size: 1.2rem; line-height: 1.1; letter-spacing: -.05
 
 .track-info { position: relative; justify-content: space-between; padding: 17px 18px 12px; }
 .track-kicker { margin-bottom: 5px; color: #806bdf; font-size: .61rem; font-weight: 900; letter-spacing: .11em; }
-h3 { margin-bottom: 3px; font-size: 1.36rem; line-height: 1; letter-spacing: -.06em; }
-.track-info p:not(.track-kicker) { margin-bottom: 0; color: var(--muted); font-size: .8rem; }
+h3 { margin-bottom: 3px; font-size: 1.36rem; line-height: 1; letter-spacing: -.06em; word-wrap: break-word; overflow-wrap: break-word; }
+.track-info p:not(.track-kicker) { margin-bottom: 0; color: var(--muted); font-size: .8rem; word-wrap: break-word; overflow-wrap: break-word; }
 
 .more-button { align-self: flex-start; border: 0; background: transparent; color: var(--ink); font-size: 1.05rem; letter-spacing: 1px; cursor: pointer; padding: 0 4px; }
 
@@ -385,20 +385,20 @@ body[data-theme="dark"] .profile-details { background: rgba(255,255,255,0.03); }
 .production-item-art { width: 44px; height: 44px; border-radius: 10px; background-size: cover; background-position: center; }
 .production-item-artist, .production-item-song { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.production-item-artist { font-size: .75rem; font-weight: 800; }.production-item-song { margin-top: 3px; color: var(--muted); font-size: .64rem; }.production-item-play { color: #6653d1; font-size: .78rem; font-weight: 900; }
 
-@media (min-width: 680px) {
+@media (min-width: 768px) {
   .auth-dialog { margin: auto; }
 }
 
-@media (min-width: 680px) {
+@media (min-width: 768px) {
   .app-shell { display: grid; min-height: 100vh; place-items: center; padding: 38px; background: radial-gradient(circle at 14% 15%, #e8e2ff, transparent 29%), radial-gradient(circle at 88% 78%, #f8d8e2, transparent 32%), #f3f1fb; }
-  .app { width: min(100%, 486px); min-height: 840px; border-radius: 30px; box-shadow: 0 25px 65px rgba(47, 34, 96, .17); }
+  .app { width: min(100%, 486px); min-height: 840px; border-radius: 30px; box-shadow: 0 25px 65px rgba(47, 34, 96, .17); padding-bottom: 105px; }
   .album-art { height: 250px; }
+  .bottom-nav { border-radius: 0 0 30px 30px; position: absolute; padding-bottom: 14px; }
 }
 
-@media (min-width: 980px) {
+@media (min-width: 1024px) {
   .app { width: min(100%, 580px); padding-right: 31px; padding-left: 31px; }
   .intro { padding-top: 38px; }
-  .bottom-nav { border-radius: 0 0 30px 30px; position: absolute; padding-bottom: 14px; }
 }
 
 @media (max-width: 600px) {
